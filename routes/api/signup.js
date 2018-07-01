@@ -14,13 +14,13 @@ router.get('/', (req, res, next) => {
 //회원가입 라우터
 router.post('/', async (req, res, next) => {
 
-    let user_mail = req.body.user_mail;
-    let user_pw = req.body.user_pw;
-    let user_nickname = req.body.user_nickname;
-    let user_name = req.body.user_name;
-    let user_sex = req.body.user_sex;
-    let user_hp = req.body.user_hp;
-    let user_birth = req.body.user_birth;
+    let user_mail = req.body.email;
+    let user_pw = req.body.password;
+    let user_nickname = req.body.nickname;
+    let user_name = req.body.name;
+    let user_sex = req.body.sex;
+    let user_hp = req.body.handphone;
+    let user_birth = req.body.birth;
 
     //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
     if(check.checkNull([user_mail, user_pw, user_nickname, user_name, user_sex, user_hp, user_birth])){

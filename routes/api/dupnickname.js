@@ -12,7 +12,7 @@ router.get('/', (req, res, next) => {
 router.post('/', async (req, res, next) => {
 
     //유저id와 유저pw를 post 방식으로 받음
-    let user_nickname = req.body.user_nickname;
+    let user_nickname = req.body.nickname;
 
 
     //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
