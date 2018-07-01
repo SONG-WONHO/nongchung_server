@@ -18,6 +18,7 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 //middleware - body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json())
 //middleware - cookie-parser
 app.use(cookieParser());
 //middleware - static
