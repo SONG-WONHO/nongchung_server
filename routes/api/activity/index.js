@@ -26,7 +26,7 @@ router.get('/', async (req,res)=>{
             let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx]);
             if(!activityResult){
                 res.status(500).send({
-                    message:"fail to show activity from server"
+                    message:"Internal server error"
                 });
             }else{
                 res.status(200).send({
