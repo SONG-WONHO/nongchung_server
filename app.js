@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 
 const indexRouter = require('./routes/index');
@@ -18,11 +19,13 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 //middleware - body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 //middleware - cookie-parser
 app.use(cookieParser());
 //middleware - static
 app.use(express.static(path.join(__dirname, 'public')));
+//cors
+app.use(cors());
 
 app.use('/', indexRouter);
 
