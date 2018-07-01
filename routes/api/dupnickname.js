@@ -11,11 +11,10 @@ router.get('/', (req, res, next) => {
 //로그인 라우터
 router.post('/', async (req, res, next) => {
 
-    //유저id와 유저pw를 post 방식으로 받음
+    //유저 닉네임 받기 위한 변수
     let user_nickname = req.body.nickname;
 
-
-    //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
+    //유저 닉네임이 빈 값으로 왔는 지 검증
     if (check.checkNull([user_nickname])){
         res.status(400).send({
             message: "Null Value"

@@ -22,7 +22,8 @@ router.post('/', async (req, res, next) => {
     let user_hp = req.body.handphone;
     let user_birth = req.body.birth;
 
-    //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
+    //입력값중에 비어있는 값이 없는 지 검증
+    //추후 escape 설정
     if(check.checkNull([user_mail, user_pw, user_nickname, user_name, user_sex, user_hp, user_birth])){
         res.status(400).send({
             message: "Null Value"
@@ -57,8 +58,8 @@ router.post('/', async (req, res, next) => {
                     message : "Internal Server Error"
                 });
             } else {
-                res.status(201).send({
-                    message: "Successfully Sign Up"
+                res.status(200).send({
+                    message: "Success To Sign Up"
                 })
             }
         }

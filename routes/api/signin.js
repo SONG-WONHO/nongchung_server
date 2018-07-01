@@ -14,11 +14,12 @@ router.get('/', (req, res, next) => {
 //로그인 라우터
 router.post('/', async (req, res, next) => {
 
-    //유저id와 유저pw를 post 방식으로 받음
+    //유저mail과 유저pw를 post 방식으로 받음
     let user_mail = req.body.email;
     let user_pw = req.body.password;
 
-    //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
+    //유저mail와 유저pw가 잘 입력됐는 지 검증
+    //가능하다면 escape
     if (check.checkNull([user_mail, user_pw])){
         res.status(400).send({
             message: "Null Value"

@@ -15,7 +15,7 @@ router.post('/', async (req, res, next) => {
     let user_mail = req.body.email;
 
 
-    //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
+    //유저메일이 빈 값인 지 검증하기
     if (check.checkNull([user_mail])){
         res.status(400).send({
             message: "Null Value"
