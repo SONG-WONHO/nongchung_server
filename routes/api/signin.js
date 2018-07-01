@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../module/db');
 const crypto = require('crypto-promise');
+const check = require('../../module/check');
+const jwt = require('../../module/jwt');
+
 
 /* 테스트용 입니다. */
 router.get('/', (req, res, next) => {
@@ -12,19 +15,19 @@ router.get('/', (req, res, next) => {
 router.post('/', async (req, res, next) => {
 
     //유저id와 유저pw를 post 방식으로 받음
-    let user_id = req.body.user_id;
+    let user_mail = req.body.user_mail;
     let user_pw = req.body.user_pw;
 
     //유저id와 유저pw가 잘 입력됐는 지 검증 - 추후 escape 설정
-    if (!user_id || !user_pw){
+    if (check.checkNull([user_mail, user_pw])){
         res.status(400).send({
             message: "Null Value"
         })
     } else { //잘 입력 됐다면 ...
 
         //1) db에 등록된 유저가 있는 지 검증
-        let checkQuery = 'SELECT * FROM user WHERE user_id = ?';
-        let checkResult = await db.queryParamArr(checkQuery, [user_id]);
+        let checkQuery = 'SELECT * FROM user WHERE user_mail = ?';
+        let checkResult = await db.queryParamArr(checkQuery, [user_mail]);
 
         if (!checkResult) { // 쿼리수행중 에러가 있을 경우
             res.status(500).send({
@@ -38,20 +41,23 @@ router.post('/', async (req, res, next) => {
             //패스워드가 같은 지 검증
             if (hashedpw.toString('base64') === checkResult[0].user_pw){ //같다면?
 
-                res.status(201).send({
-                    message: "Login Success"
+                let token = jwt.sign(checkResult[0].user_idx);
+
+                res.status(200).send({
+                    message: "Success To Sign In",
+                    token:token
                 });
             } else { //다르다면?
 
                 res.status(400).send({
-                    message : "Login Failed"
+                    message : "Fail To Sign In"
                 });
                 console.log("password error");
             }
         } else { // 유저가 없을 때
 
             res.status(400).send({
-                message : "Login Failed"
+                message : "Fail To Sign In"
             });
             console.log("id error");
         }
