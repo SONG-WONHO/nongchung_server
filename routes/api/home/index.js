@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../../module/db');
+const searchRouter = require('./search');
 
+router.use('/search', searchRouter);
 
-/* 테스트용 입니다. */
 router.get('/', async (req, res, next) => {
     let selectQuery = `SELECT farm.farm_idx, farm_addr, img, nh_name, nh_price, nh_period, nh_star FROM  NONGHWAL.farm 
     JOIN NONGHWAL.nh ON farm.farm_idx = nh.farm_idx 
