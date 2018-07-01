@@ -3,7 +3,8 @@ const router = express.Router();
 
 const signinRouter = require('./signin');
 const signupRouter = require('./signup');
-const dupRouter = require('./dup');
+const dupEmailRouter = require('./dupemail');
+const dupNickRouter = require('./dupnickname');
 
 const homeRouter = require('./home/index');
 const bookmarkRouter = require('./bookmark/index');
@@ -18,7 +19,8 @@ router.get('/', (req, res, next) => {
 
 router.use('/signin', signinRouter);
 router.use('/signup', signupRouter);
-router.use('/dup', dupRouter);
+router.use('/dup-email', dupEmailRouter);
+router.use('/dup-nickname', dupNickRouter);
 
 router.use('/home', homeRouter);
 router.use('/bookmark', bookmarkRouter);
