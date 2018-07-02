@@ -8,8 +8,8 @@ const crypto = require('crypto-promise');
 router.get('/', async (req,res)=>{
     var token = req.headers.token;
     if(!token){
-        res.status(200).send({
-            message:"fail to show mypage from client"
+        res.status(400).send({
+            message:"fail to show mypage from client, Null value"
         });
     }else{
         var decoded = jwt.verify(token);
@@ -39,7 +39,7 @@ router.put('/',async (req,res)=>{
     var token = req.headers.token;
     var nickname = req.body.nickname;
     if(!token || !nickname){
-        res.status(200).send({
+        res.status(400).send({
             message:"fail to change nickname from client,Null Value"
         });
     }else{
@@ -73,7 +73,7 @@ router.put('/password', async (req,res)=>{
     var newpw = req.body.newpw;
 
     if(!token || !pw ||!newpw){
-        res.status(200).send({
+        res.status(400).send({
             message:"Null value"
         });
     }
@@ -110,7 +110,7 @@ router.put('/password', async (req,res)=>{
                         });
                     }
                 }else{
-                    res.status(400).send({
+                    res.status(200).send({//기존의 비번 확인한게 틀리면 400으로 처리
                         message:"fail To change PW from client"
                     });
                 }
@@ -122,7 +122,7 @@ router.put('/password', async (req,res)=>{
 router.get('/point',async (req,res)=>{
     var token = req.headers.token;
     if(!token){
-        res.status(200).send({
+        res.status(400).send({
             message:"Null value"
         });
     }else{
@@ -140,6 +140,24 @@ router.get('/point',async (req,res)=>{
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
             let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
             console.log(pointResult);
+            let infoQuery = `SELECT f.addr, n.name, n.point 
+            FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u
+            WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx 
+            AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
+            let infoResult = await db.queryParamArr(infoQuery,[decoded.user_idx])
+            console.log(infoResult);
+            if(!pointResult || !infoResult){
+                res.status(500).send({
+                    message:"Internal server error"
+                })
+            }else{
+                res.status(200).send({
+                    message:"success To show point",
+                    userPoint:pointResult[0]['SUM(n.point)'],
+                    data:infoResult
+                })
+
+            }
         }
     }
 });
