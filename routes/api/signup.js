@@ -41,7 +41,7 @@ router.post('/', async (req, res, next) => {
             });
 
         } else if (checkResult.length >= 1){ // 유저가 존재할 때
-            res.status(400).send({
+            res.status(200).send({
                 message : "Already Exists"
             });
 
