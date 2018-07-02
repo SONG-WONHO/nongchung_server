@@ -8,7 +8,7 @@ const crypto = require('crypto-promise');
 router.get('/', async (req,res)=>{
     var token = req.headers.token;
     if(!token){
-        res.status(400).send({
+        res.status(200).send({
             message:"fail to show mypage from client"
         });
     }else{
@@ -18,8 +18,8 @@ router.get('/', async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let mypageshowQuery = `SELECT user_mail, user_name, user_point,user_img 
-            FROM user WHERE user_idx=?`;
+            let mypageshowQuery = `SELECT user.mail, user.name, user.point,user.img 
+            FROM user WHERE user.idx=?`;
             let mypageshowResult = await db.queryParamArr(mypageshowQuery,[decoded.user_idx]);
             if(!mypageshowResult){
                 res.status(500).send({
@@ -39,7 +39,7 @@ router.put('/',async (req,res)=>{
     var token = req.headers.token;
     var nickname = req.body.nickname;
     if(!token || !nickname){
-        res.status(400).send({
+        res.status(200).send({
             message:"fail to change nickname from client,Null Value"
         });
     }else{
@@ -49,7 +49,7 @@ router.put('/',async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let changingQuery = `UPDATE user SET user_nickname = ? WHERE user_idx =?`;
+            let changingQuery = `UPDATE user SET user.nickname = ? WHERE idx =?`;
             let changingResult = await db.queryParamArr(changingQuery,[nickname,decoded.user_idx]);
             if(!changingResult){
                 res.status(500).send({
@@ -73,7 +73,7 @@ router.put('/password', async (req,res)=>{
     var newpw = req.body.newpw;
 
     if(!token || !pw ||!newpw){
-        res.status(400).send({
+        res.status(200).send({
             message:"Null value"
         });
     }
@@ -85,19 +85,19 @@ router.put('/password', async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let checkQuery = "SELECT * FROM user WHERE user_idx = ?";
+            let checkQuery = "SELECT * FROM user WHERE user.idx = ?";
             let checkResult = await db.queryParamArr(checkQuery,[decoded.user_idx]);
-            let hashedpw = await crypto.pbkdf2(pw, checkResult[0].user_salt, 100000, 32, 'sha512');
+            let hashedpw = await crypto.pbkdf2(pw, checkResult[0].salt, 100000, 32, 'sha512');
             if(!checkResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
             }else{
-                if(hashedpw.toString('base64')===checkResult[0].user_pw){
+                if(hashedpw.toString('base64')===checkResult[0].pw){
                     //console.log(hashedpw.toString('base64'));
                     const salt = await crypto.randomBytes(32);
                     const hashednewpw = await crypto.pbkdf2(newpw, salt.toString('base64'), 100000, 32, 'sha512');
-                    let newpwQuery = `UPDATE user SET user_pw =?, user_salt=? WHERE user_idx = ?`;
+                    let newpwQuery = `UPDATE user SET user.pw =?, user.salt=? WHERE user.idx = ?`;
                     let newpwResult = await db.queryParamArr(newpwQuery,[hashednewpw.toString('base64'),salt.toString('base64'),decoded.user_idx]);
                     //console.log(hashednewpw.toString('base64'));
                     if(!newpwResult){
@@ -121,9 +121,8 @@ router.put('/password', async (req,res)=>{
 
 router.get('/point',async (req,res)=>{
     var token = req.headers.token;
-
     if(!token){
-        res.status(400).send({
+        res.status(200).send({
             message:"Null value"
         });
     }else{
@@ -135,11 +134,13 @@ router.get('/point',async (req,res)=>{
         }
         else
         {
-            let pointQuery = `SELECT * FROM NONGHWAL.shedule AS s, NONGHWAL.nh AS n, NONGHWAL.acitivty AS a WHERE a.sche_idx = s.sche_idx AND s.nh_idx = n.nh_idx`;
-            let pointResult ;
-
+            let pointQuery = `SELECT SUM(n.point) 
+            FROM NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx 
+            AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
+            let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
+            console.log(pointResult);
         }
-
     }
 });
 

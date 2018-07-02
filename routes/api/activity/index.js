@@ -19,10 +19,10 @@ router.get('/', async (req,res)=>{
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
         }else{
-            let activityQuery = `SELECT s.sche_start_date, s.sche_end_date, f.farm_addr, n.nh_period,n.nh_name
+            let activityQuery = `SELECT s.startDate, s.endDate, f.addr, n.period, n.name
             FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
-            WHERE a.sche_idx = s.sche_idx AND s.nh_idx = n.nh_idx AND n.farm_idx = f.farm_idx
-            AND a.user_idx = u.user_idx AND u.user_idx = ?`;
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx
+            AND a.userIdx = u.idx AND u.idx = ?`;
             let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx]);
             if(!activityResult){
                 res.status(500).send({
