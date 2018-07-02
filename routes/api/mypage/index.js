@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../../../module/db');
 const jwt = require('../../../module/jwt');
 const crypto = require('crypto-promise');
+const upload = require('../../../config/s3multer').uploadUserImage;
 
 //내정보보기
 router.get('/', async (req,res)=>{
@@ -13,6 +14,7 @@ router.get('/', async (req,res)=>{
         });
     }else{
         var decoded = jwt.verify(token);
+        console.log(decoded);
         if(decoded ==-1){
             res.status(500).send({
                 message:"token error"
@@ -140,10 +142,10 @@ router.get('/point',async (req,res)=>{
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
             let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
             //console.log(pointResult);
-            let infoQuery = `SELECT f.addr, n.name, n.point
-            FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u
-            WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx 
-            AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
+            let infoQuery = `SELECT f.addr, n.name, n.point,SUBSTRING_INDEX(GROUP_CONCAT(i.img SEPARATOR '|'),"|",1) AS img
+            FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u, NONGHWAL.farm_img AS i
+            WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx AND f.idx = i.farmIdx
+            AND a.userIdx = u.idx AND u.idx=? AND a.state = 1 GROUP BY i.farmIdx`;
             let infoResult = await db.queryParamArr(infoQuery,[decoded.user_idx])
             //console.log(infoResult);
             if(!pointResult || !infoResult){
@@ -159,6 +161,42 @@ router.get('/point',async (req,res)=>{
             }
         }
     }
+});
+router.put('/photo',upload.single('image'),async (req,res)=>{
+    var token = req.headers.token;
+    var img = req.file.location;
+    if(!img||!token){//토큰이나 이미지가 없으면 널포인트 에러
+        res.status(400).send({
+            message:"Null value"
+        });
+    }
+    else{
+        var decoded = jwt.verify(token);
+        if(decoded == -1){
+            res.status(500).send({
+                message:"token error"
+            });
+        }else
+        {
+            let photoQuery = `UPDATE user SET user.img = ? WHERE user.idx = ?`;//유저테이블에사진 업데이트
+            let photoResult = await db.queryParamArr(photoQuery,[img,decoded.user_idx]);
+            if(!photoResult){
+                res.status(500).send({
+                    message:"Internal server error"
+                });
+            }
+            else{
+                res.status(200).send({
+                    message:"success To change photo",
+                    data:img
+                });
+
+            }
+
+        }
+        
+    }
+
 });
 
 
