@@ -139,13 +139,13 @@ router.get('/point',async (req,res)=>{
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx 
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
             let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
-            console.log(pointResult);
-            let infoQuery = `SELECT f.addr, n.name, n.point 
+            //console.log(pointResult);
+            let infoQuery = `SELECT f.addr, n.name, n.point
             FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u
             WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx 
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
             let infoResult = await db.queryParamArr(infoQuery,[decoded.user_idx])
-            console.log(infoResult);
+            //console.log(infoResult);
             if(!pointResult || !infoResult){
                 res.status(500).send({
                     message:"Internal server error"
@@ -156,7 +156,6 @@ router.get('/point',async (req,res)=>{
                     userPoint:pointResult[0]['SUM(n.point)'],
                     data:infoResult
                 })
-
             }
         }
     }
