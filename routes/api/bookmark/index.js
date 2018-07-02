@@ -21,9 +21,9 @@ router.get('/', async (req, res) => {
             });
         }else{
             let getBookmarkListQuery = `SELECT nh.idx, nh.price, nh.star, nh.period, nh.name,
-            farm.addr, GROUP_CONCAT(farm_img.img SEPARATOR ',') as img FROM (bookmark JOIN nh) JOIN 
-            (farm JOIN farm_img) WHERE nh.idx = bookmark.nhIdx AND farm.idx = farm_img.farmIdx AND 
-            bookmark.userIdx = ?`
+            farm.addr, SUBSTRING_INDEX(GROUP_CONCAT(farm_img.img SEPARATOR ','), ',', 1) as img 
+            FROM bookmark, nh, farm, farm_img WHERE nh.idx = bookmark.nhIdx 
+            AND farm.idx = farm_img.farmIdx AND bookmark.userIdx = ? GROUP BY nhIdx`
             let getBookmarkList = await db.queryParamArr(getBookmarkListQuery, [decoded.user_idx]);
 
             if(!getBookmarkList){
@@ -106,7 +106,7 @@ router.post('/', async (req, res) => {
             });
 
         }else{
-            let idx = req.body.idx;
+            let idx = req.body.idx;         //nh의 index
 
             //농활 인덱스 안주면 널밸류 반환
 
