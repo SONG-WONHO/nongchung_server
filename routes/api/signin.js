@@ -15,20 +15,20 @@ router.get('/', (req, res, next) => {
 router.post('/', async (req, res, next) => {
 
     //유저mail과 유저pw를 post 방식으로 받음
-    let user_mail = req.body.email;
-    let user_pw = req.body.password;
+    let userMail = req.body.email;
+    let userPw = req.body.password;
 
     //유저mail와 유저pw가 잘 입력됐는 지 검증
     //가능하다면 escape
-    if (check.checkNull([user_mail, user_pw])){
+    if (check.checkNull([userMail, userPw])){
         res.status(400).send({
             message: "Null Value"
         })
     } else { //잘 입력 됐다면 ...
 
         //1) db에 등록된 유저가 있는 지 검증
-        let checkQuery = 'SELECT * FROM user WHERE user_mail = ?';
-        let checkResult = await db.queryParamArr(checkQuery, [user_mail]);
+        let checkQuery = 'SELECT * FROM user WHERE mail = ?';
+        let checkResult = await db.queryParamArr(checkQuery, [userMail]);
 
         if (!checkResult) { // 쿼리수행중 에러가 있을 경우
             res.status(500).send({
@@ -37,10 +37,10 @@ router.post('/', async (req, res, next) => {
 
         } else if (checkResult.length === 1){ // 유저가 존재할 때
             //2) 등록된 유저의 패스워드가 저장된 패스워드와 일치하는 지 검증 - hash, salt
-            let hashedpw = await crypto.pbkdf2(user_pw, checkResult[0].user_salt, 100000, 32, 'sha512');	// 입력받은 pw를 DB에 존재하는 salt로 hashing
+            let hashedpw = await crypto.pbkdf2(userPw, checkResult[0].salt, 100000, 32, 'sha512');	// 입력받은 pw를 DB에 존재하는 salt로 hashing
 
             //패스워드가 같은 지 검증
-            if (hashedpw.toString('base64') === checkResult[0].user_pw){ //같다면?
+            if (hashedpw.toString('base64') === checkResult[0].pw){ //같다면?
 
                 let token = jwt.sign(checkResult[0].user_idx);
 
