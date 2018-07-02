@@ -14,17 +14,17 @@ router.get('/', async (req, res, next) => {
 
     let selectQuery = `
     SELECT 
-        nh.nh_idx, 
-        nh.nh_name, 
-        nh.nh_price, 
-        nh.nh_star, 
-        nh.nh_period, 
-        farm.farm_addr, 
+        nh.idx, 
+        nh.name, 
+        nh.price, 
+        nh.star, 
+        nh.period, 
+        farm.addr, 
         farm_img.img 
     FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
-    WHERE farm.farmer_idx = farmer.farmer_idx 
-    AND farm.farm_idx = nh.farm_idx
-    AND farm.farm_idx = farm_img.farm_idx`;
+    WHERE farm.farmerIdx = farmer.idx 
+    AND farm.idx = nh.farmIdx
+    AND farm.idx = farm_img.farmIdx`;
 
     //쿼리 결과 모든 농활 정보
     let selectResult = await db.queryParamNone(selectQuery);
@@ -61,7 +61,8 @@ router.get('/', async (req, res, next) => {
             "populNh":selectResult,
             "newNh":[
                 {
-                    "address":"경상북도 경주",
+                    "idx":2,
+                    "addr":"경상북도 경주",
                     "name":"경주 사과농촌 체험 활동",
                     "img":"13.13.13.13/farm/3",
                     "price":"25,000",
@@ -69,7 +70,8 @@ router.get('/', async (req, res, next) => {
                     "star":"8.7"
                 },
                 {
-                    "address":"제주 서귀포시",
+                    "idx":2,
+                    "addr":"제주 서귀포시",
                     "name":"서귀포 행복 감귤농활체험",
                     "img":"13.13.13.13/farm/4",
                     "price":"25,000",
@@ -79,15 +81,18 @@ router.get('/', async (req, res, next) => {
             ],
             "populFarm":[
                 {
-                    "address":"제주 서귀포시",
+                    "idx":2,
+                    "addr":"제주 서귀포시",
                     "name":"경주 사과농장"
                 },
                 {
-                    "address":"제주 서귀포시",
+                    "idx":2,
+                    "addr":"제주 서귀포시",
                     "name":"부산 사과농장"
                 },
                 {
-                    "address":"제주 서귀포시",
+                    "idx":2,
+                    "addr":"제주 서귀포시",
                     "name":"대전 포도농장"
                 }
             ]
