@@ -42,7 +42,7 @@ router.post('/', async (req, res, next) => {
             //패스워드가 같은 지 검증
             if (hashedpw.toString('base64') === checkResult[0].pw){ //같다면?
 
-                let token = jwt.sign(checkResult[0].user_idx);
+                let token = jwt.sign(checkResult[0].idx);
 
                 res.status(200).send({
                     message: "Success To Sign In",
