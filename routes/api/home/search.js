@@ -7,45 +7,42 @@ const moment = require('moment');
 /* 테스트용 입니다. */
 router.get('/', async (req, res, next) => {
 
-    let startDate = req.query.start;
-    let endDate = req.query.end;
-    let person = req.query.person;
-    let searchContent = req.query.scontent;
+    let startDate = req.query.start || "2000-01-01";
+    let endDate = req.query.end || "2500-01-01";
+    let person = req.query.person || 0;
+    let searchContent = req.query.scontent || "";
 
     console.log(startDate, endDate, person, searchContent);
 
-    //빈 값인지 확인하는 쿼리
-    if (check.checkNull([startDate, endDate, person, searchContent])){
-        res.status(400).send({
-            message: "Null Value"
-        })
+    //딕셔너리 만들기 위함, 농활 인덱스: 몇명 신청 받는 지
+    let selectQuery = `SELECT idx, personLimit FROM NONGHWAL.nh;`;
+    let selectResult = await db.queryParamNone(selectQuery);
+
+    //딕셔너리 생성
+    let dicPerson = {};
+    for (let i = 0; i < selectResult.length; i++){
+        dicPerson[selectResult[i].idx] = selectResult[i].personLimit;
+    }
+
+    //딕셔너리 만들기 위함, 농활 인덱스 : 농활 이름
+    selectQuery = `SELECT idx, name FROM NONGHWAL.nh`;
+    selectResult = await db.queryParamNone(selectQuery);
+
+    //딕셔너리 생성
+    let dicName = {};
+    for (let i = 0; i < selectResult.length; i++){
+        dicName[selectResult[i].idx] = selectResult[i].name;
+    }
+
+    //날짜가 설정돼 있지 않다면
+    if (false) {
 
     } else {
-        //딕셔너리 만들기 위함, 농활 인덱스: 몇명 신청 받는 지
-        let selectQuery = `SELECT idx, personLimit FROM NONGHWAL.nh;`;
-        let selectResult = await db.queryParamNone(selectQuery);
-
-        //딕셔너리 생성
-        let dicPerson = {};
-        for (let i = 0; i < selectResult.length; i++){
-            dicPerson[selectResult[i].idx] = selectResult[i].personLimit;
-        }
-
-        //딕셔너리 만들기 위함, 농활 인덱스 : 농활 이름
-        selectQuery = `SELECT idx, name FROM NONGHWAL.nh`;
-        selectResult = await db.queryParamNone(selectQuery);
-
-        //딕셔너리 생성
-        let dicName = {};
-        for (let i = 0; i < selectResult.length; i++){
-            dicName[selectResult[i].idx] = selectResult[i].name;
-        }
-
         //날짜 필터를 위한 쿼리
         selectQuery = `
-        SELECT nhIdx, person 
-        FROM NONGHWAL.schedule 
-        WHERE startDate >= ? AND endDate <= ?`;
+       SELECT nhIdx, person 
+       FROM NONGHWAL.schedule 
+       WHERE startDate >= ? AND endDate <= ?`;
         //결과는 농활 인덱스랑 사람 숫자
         selectResult = await db.queryParamArr(selectQuery, [startDate, endDate]);
 
@@ -62,9 +59,15 @@ router.get('/', async (req, res, next) => {
 
         //이름 필터 함수
         function filterName(value) {
-            //제목에 사용자가 검색한 내용이 포함돼 있는가?
-            if (dicName[value['nhIdx']].indexOf(searchContent) !== -1) {
+
+            //사용자가 입력한 값이 없는가?
+            if (searchContent === "") {
                 return true;
+            } else {
+                //제목에 사용자가 검색한 내용이 포함돼 있는가?
+                if (dicName[value['nhIdx']].indexOf(searchContent) !== -1) {
+                    return true;
+                }
             }
         }
 
@@ -89,11 +92,12 @@ router.get('/', async (req, res, next) => {
             nh.star, 
             nh.period, 
             farm.addr, 
-            farm_img.img 
+            substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
         FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
         WHERE farm.farmerIdx = farmer.idx 
         AND farm.idx = nh.farmIdx
-        AND farm.idx = farm_img.farmIdx`;
+        AND farm.idx = farm_img.farmIdx
+        group by idx`;
 
         //쿼리 결과 모든 농활 정보
         selectResult = await db.queryParamNone(selectQuery);
@@ -114,7 +118,6 @@ router.get('/', async (req, res, next) => {
                 "data": selectResult
             })
         }
-
     }
 });
 

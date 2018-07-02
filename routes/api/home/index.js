@@ -13,7 +13,6 @@ router.get('/', async (req, res, next) => {
     //광고 관련 회의 필요
     //인기 농장에 관련한 회의 필요
     //인기 농활, 뉴 농활에 대한 메서드 만들 필요 있음
-    //대표 이미지 중복 제거 알고리즘 추가 필요
 
     let selectQuery = `
     SELECT 
@@ -23,11 +22,12 @@ router.get('/', async (req, res, next) => {
         nh.star, 
         nh.period, 
         farm.addr, 
-        farm_img.img 
+        substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
     FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
     WHERE farm.farmerIdx = farmer.idx 
     AND farm.idx = nh.farmIdx
-    AND farm.idx = farm_img.farmIdx`;
+    AND farm.idx = farm_img.farmIdx
+    group by idx`;
 
     //쿼리 결과 모든 농활 정보
     let selectResult = await db.queryParamNone(selectQuery);
