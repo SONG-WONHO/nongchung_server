@@ -5,6 +5,11 @@ const check = require('../../module/check');
 const crypto = require('crypto-promise');
 
 
+
+
+
+
+
 /* 테스트용 입니다. */
 router.get('/', (req, res, next) => {
     res.render('index', { title: 'api/signup' });
@@ -50,8 +55,8 @@ router.post('/', async (req, res, next) => {
             const hashedpw = await crypto.pbkdf2(userPw, salt.toString('base64'), 100000, 32, 'sha512');
 
             //DB에 유저 정보 저장 쿼리
-            let insertQuery = "INSERT INTO NONGHWAL.user (mail, pw, nickname, name, sex, hp, birth, salt, point) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            let insertResult = await db.queryParamArr(insertQuery, [userMail, hashedpw.toString('base64'), userNickname, userName, userSex, userHp, userBirth, salt.toString('base64'), 0]);
+            let insertQuery = "INSERT INTO NONGHWAL.user (mail, pw, nickname, name, sex, hp, birth, salt, point, img) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            let insertResult = await db.queryParamArr(insertQuery, [userMail, hashedpw.toString('base64'), userNickname, userName, userSex, userHp, userBirth, salt.toString('base64'), 0, "https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530535264640.userDefault.png"]);
 
             if(!insertResult){ // 쿼리수행중 에러가 있을 경우
                 res.status(500).send({

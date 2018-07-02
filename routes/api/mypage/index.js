@@ -37,7 +37,7 @@ router.get('/', async (req,res)=>{
     }
 });
 
-router.put('/',async (req,res)=>{
+router.put('/nickname',async (req,res)=>{
     var token = req.headers.token;
     var nickname = req.body.nickname;
     if(!token || !nickname){
@@ -66,7 +66,6 @@ router.put('/',async (req,res)=>{
                 });
             }
         }
-
     }
 });
 router.put('/password', async (req,res)=>{
@@ -190,13 +189,10 @@ router.put('/photo',upload.single('image'),async (req,res)=>{
                     message:"success To change photo",
                     data:img
                 });
-
             }
-
         }
         
     }
-
 });
 
 

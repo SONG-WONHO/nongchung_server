@@ -6,6 +6,7 @@ const check = require('../../module/check');
 const jwt = require('../../module/jwt');
 
 
+
 /* 테스트용 입니다. */
 router.get('/', (req, res, next) => {
     res.render('index', { title: 'api/signin' });
@@ -17,7 +18,6 @@ router.post('/', async (req, res, next) => {
     //유저mail과 유저pw를 post 방식으로 받음
     let userMail = req.body.email;
     let userPw = req.body.password;
-
     //유저mail와 유저pw가 잘 입력됐는 지 검증
     //가능하다면 escape
     if (check.checkNull([userMail, userPw])){
