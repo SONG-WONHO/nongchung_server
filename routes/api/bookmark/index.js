@@ -14,7 +14,6 @@ router.get('/', async (req, res) => {
         })
     } else{
         let decoded = jwt.verify(token);
-        console.log(decoded.user_idx);
         if(decoded==-1){
             res.status(500).send({
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
@@ -79,7 +78,7 @@ router.delete('/', async (req, res) => {
                     })
                 } else{
                     res.status(200).send({
-                        message : "Successfully Deleted"
+                        message : "Success to Delete"
                     })
                 }
             }
@@ -98,43 +97,55 @@ router.post('/', async (req, res) => {
     } else{
         let decoded = jwt.verify(token);
 
-        console.log(decoded.user_idx);
-
         if(decoded==-1){
             res.status(500).send({
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
 
         }else{
-            let idx = req.body.idx;         //nh의 index
+            let nhIdx = req.body.nhIdx;         //nh의 index
 
             //농활 인덱스 안주면 널밸류 반환
 
             let checkExistQuery = "SELECT idx FROM nh WHERE idx = ?";
-            let checkExist = await db.queryParamArr(checkExistQuery, [idx]);
+            let checkExist = await db.queryParamArr(checkExistQuery, [nhIdx]);
 
             if(!checkExist){
                 res.status(500).send({
-                    message : "Internal Server Error1"
+                    message : "Internal Server Error"
                 });
             } else if(checkExist.length < 1) {
                 res.status(400).send({
                     message : "No Nonghwal Activity"
                 });
             } else{
-                let insertBookmarkQuery = "INSERT INTO bookmark (userIdx, nhIdx) VALUES (?, ?)";
-                let insertBookmarkResult = await db.queryParamArr(insertBookmarkQuery, [decoded.user_idx, idx]);
+                let checkExistInBmListQuery = "SELECT nhIdx FROM bookmark WHERE nhIdx = ?"
+                let checkExistInBmList = await db.queryParamArr(checkExistInBmListQuery, [nhIdx]);
 
-
-                if(!insertBookmarkResult){
+                if(!checkExistInBmList){
                     res.status(500).send({
-                        message : "Internal Server Error2"
+                        message : "Internal Server Error"
+                    })
+                } else if(checkExistInBmList.length >= 1){
+                    res.status(400).send({
+                        message : "Already Exist"
                     })
                 } else{
-                    res.status(200).send({
-                        message : "Success to Add"
-                    })
+                    let insertBookmarkQuery = "INSERT INTO bookmark (userIdx, nhIdx) VALUES (?, ?)";
+                    let insertBookmarkResult = await db.queryParamArr(insertBookmarkQuery, [decoded.user_idx, nhIdx]);
+
+                    if(!insertBookmarkResult){
+                        res.status(500).send({
+                            message : "Internal Server Error"
+                        })
+                    } else{
+                        res.status(200).send({
+                            message : "Success to Add"
+                        })
+                    }
                 }
+
+                
             }
         }
     }

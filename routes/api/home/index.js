@@ -3,10 +3,11 @@ const router = express.Router();
 const db = require('../../../module/db');
 const searchRouter = require('./search');
 const detailRouter = require('./detail/index');
-
+const requestRouter = require('./request/index');
 
 router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
+router.use('/request', requestRouter);
 
 router.get('/', async (req, res, next) => {
 
