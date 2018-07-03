@@ -46,19 +46,19 @@ router.get('/', async (req, res, next) => {
             "ads":[
                 {
                     "comment":"맛있는 귤과 함께하는 농활 특집",
-                    "img":"13.13.13.13/ads/1"
+                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
                 },
                 {
                     "comment":"우리 고장의 사과를 재배하는 농활 특집",
-                    "img":"13.13.13.13/ads/2"
+                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
                 },
                 {
                     "comment":"사랑이 싹트는 농활 특집",
-                    "img":"13.13.13.13/ads/3"
+                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
                 },
                 {
                     "comment":"여름맞이 아보카도 농활 특집",
-                    "img":"13.13.13.13/ads/4"
+                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
                 }
             ],  
             "populNh":selectResult,
