@@ -135,12 +135,14 @@ router.get('/point',async (req,res)=>{
         }
         else
         {
-            let pointQuery = `SELECT SUM(n.point) 
+            let pointQuery = `SELECT SUM(n.point) AS point
             FROM NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx 
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1`;
             let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
-            //console.log(pointResult);
+            let pointAddQuery = `UPDATE user SET user.point = ? WHERE user.idx = ?`;
+            let pointAddResult = await db.queryParamArr(pointAddQuery,[pointResult[0].point,decoded.user_idx]);
+            console.log(pointResult);
             let infoQuery = `SELECT f.addr, n.name, n.point,SUBSTRING_INDEX(GROUP_CONCAT(i.img SEPARATOR '|'),"|",1) AS img
             FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u, NONGHWAL.farm_img AS i
             WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx AND f.idx = i.farmIdx
