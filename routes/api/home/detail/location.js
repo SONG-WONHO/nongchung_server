@@ -32,10 +32,12 @@ router.get('/', async (req, res, next) => {
             selectQuery = "SELECT * FROM farm WHERE idx = ?";
             selectResult = await db.queryParamArr(selectQuery, [selectResult[0]['farmIdx']]);
 
+            // address to geoLocation 추가하기
+
             res.status(200).send({
                 "message":"Success To Get Location",
                 "location":selectResult[0]['addr'],
-                "geolocation":{
+                "geoLocation":{
                     "latitude":130,
                     "longitude":150
                 }
