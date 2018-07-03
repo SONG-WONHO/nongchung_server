@@ -5,7 +5,7 @@ module.exports = {
 
         for (let v of value) {
 
-            if (v === "") {
+            if (v === ""|| v === null || v === undefined) {
 
                 return 1;
             }

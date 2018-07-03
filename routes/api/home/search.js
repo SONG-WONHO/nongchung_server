@@ -34,15 +34,15 @@ router.get('/', async (req, res, next) => {
         dicName[selectResult[i].idx] = selectResult[i].name;
     }
 
-    //날짜가 설정돼 있지 않다면
+    //날짜가 설정돼 있지 않다면 - No need
     if (false) {
 
     } else {
         //날짜 필터를 위한 쿼리
         selectQuery = `
-       SELECT nhIdx, person 
-       FROM NONGHWAL.schedule 
-       WHERE startDate >= ? AND endDate <= ?`;
+        SELECT nhIdx, person 
+        FROM NONGHWAL.schedule 
+        WHERE startDate >= ? AND endDate <= ?`;
         //결과는 농활 인덱스랑 사람 숫자
         selectResult = await db.queryParamArr(selectQuery, [startDate, endDate]);
 
