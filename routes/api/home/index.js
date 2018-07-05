@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../../module/db');
+const jwt = require('../../../module/jwt');
+
 const searchRouter = require('./search');
 const detailRouter = require('./detail/index');
 const requestRouter = require('./request/index');
@@ -9,81 +11,68 @@ router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
 
+//인기농활 얻기
+function getPopulNh(arr) {
+
+}
+
+//최근농활 얻기
+function getNewNh(arr) {
+    let newNh = [];
+    //농활 리스트 중 가장 나중것 6개 추가하기
+    for (let i = 1; i < 7; i++){
+        newNh.push(arr.slice(i* -1)[0]);
+    }
+    return newNh;
+}
+
 router.get('/', async (req, res, next) => {
 
-    //광고 관련 회의 필요
     //인기 농장에 관련한 회의 필요
-    //인기 농활, 뉴 농활에 대한 메서드 만들 필요 있음
+    //인기 농활에 대한 메서드 만들 필요 있음
 
-    let selectQuery = `
-    SELECT 
-        nh.idx, 
-        nh.name, 
-        nh.price, 
-        nh.star, 
-        nh.period, 
-        farm.addr, 
-        substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
-    FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
-    WHERE farm.farmerIdx = farmer.idx 
-    AND farm.idx = nh.farmIdx
-    AND farm.idx = farm_img.farmIdx
-    group by idx`;
+    //토큰이 있는 지 없는 지 검증하기
+    let token = req.headers.token;
 
-    //쿼리 결과 모든 농활 정보
-    let selectResult = await db.queryParamNone(selectQuery);
+    //토큰이 없다면? ==> 기존의 방식으로!
+    if (!token) {
 
-    //인기농활 필터링 쿼리
+        //광고 리스트 뽑기
+        let selectAdQuery = `SELECT * FROM ad`;
+        //광고리스트
+        let selectAdResult = await db.queryParamNone(selectAdQuery);
 
-    //최근농활 필터링 쿼리
+        //모든 농활 뽑기
+        let selectNhQuery =
+            `SELECT 
+                nh.idx, 
+                nh.name, 
+                nh.price, 
+                nh.star, 
+                nh.period, 
+                farm.addr, 
+                substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
+            FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
+            WHERE farm.farmerIdx = farmer.idx 
+            AND farm.idx = nh.farmIdx
+            AND farm.idx = farm_img.farmIdx
+            group by idx`;
 
-    if(!selectResult){
-        res.status(500).send({
-            message : "Internal Server Error"
-        });
-    } else {
-        res.status(200).send({
-            message : "Success To Get Information",
-            "ads":[
-                {
-                    "comment":"맛있는 귤과 함께하는 농활 특집",
-                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
-                },
-                {
-                    "comment":"우리 고장의 사과를 재배하는 농활 특집",
-                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
-                },
-                {
-                    "comment":"사랑이 싹트는 농활 특집",
-                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
-                },
-                {
-                    "comment":"여름맞이 아보카도 농활 특집",
-                    "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1530616588400.6-DEPARTMENT%20OF%20JAPANESE%20STUDIES.jpg"
-                }
-            ],  
-            "populNh":selectResult,
-            "newNh":[
-                {
-                    "idx":2,
-                    "addr":"경상북도 경주",
-                    "name":"경주 사과농촌 체험 활동",
-                    "img":"13.13.13.13/farm/3",
-                    "price":"25,000",
-                    "period":"1박 2일",
-                    "star":"8.7"
-                },
-                {
-                    "idx":2,
-                    "addr":"제주 서귀포시",
-                    "name":"서귀포 행복 감귤농활체험",
-                    "img":"13.13.13.13/farm/4",
-                    "price":"25,000",
-                    "period":"1박 2일",
-                    "star":"8.7"
-                }
-            ],
-            "populFarm":[
+        //쿼리 결과 모든 농활 정보
+        let selectNhResult = await db.queryParamNone(selectNhQuery);
+
+        if(!selectNhResult && !selectAdResult){
+            res.status(500).send({
+                message : "Internal Server Error"
+            });
+        } else {
+
+            //인기 농활 뽑기 알고리즘 추가
+            //인기 농장 뽑기 알고리즘 추가
+
+            let populNh = selectNhResult;
+            let newNh = getNewNh(selectNhResult);
+            let populFarm = [
                 {
                     "idx":2,
                     "addr":"제주 서귀포시",
@@ -99,8 +88,104 @@ router.get('/', async (req, res, next) => {
                     "addr":"제주 서귀포시",
                     "name":"대전 포도농장"
                 }
-            ]
-        })
+            ];
+
+            res.status(200).send({
+                message : "Success To Get Information",
+                "ads": selectAdResult,
+                "populNh":populNh,
+                "newNh":newNh,
+                "populFarm":populFarm
+            })
+        }
+
+    } else { //토큰이 있다면? ==> 유저의 찜 상태를 보여줘야 함!
+        let decoded = jwt.verify(token);
+
+        //정당하지 않은 토큰이 들어올 때
+        if(decoded === -1){
+            res.status(500).send({
+                message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+            });
+
+        }else{ //정당한 토큰이 들어왔다면?
+
+            let userIdx = decoded.user_idx;
+
+            //광고 리스트 뽑기
+            let selectAdQuery = `SELECT * FROM ad`;
+            //광고리스트
+            let selectAdResult = await db.queryParamNone(selectAdQuery);
+
+            //모든 농활 뽑기
+            let selectNhQuery =
+                `SELECT 
+                    idx, 
+                    name, 
+                    price, 
+                    star, 
+                    period, 
+                    addr, 
+                    img, 
+                    if(userIdx = ?, 1, 0) AS isBooked 
+                FROM NONGHWAL.bookmark 
+                RIGHT JOIN 
+                    (SELECT 
+                        nh.idx, 
+                        nh.name, 
+                        nh.price, 
+                        nh.star, 
+                        nh.period, 
+                        farm.addr, 
+                        substring_index(group_concat(farm_img.img separator ','), ',', 1) as img
+                    FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
+                    WHERE farm.farmerIdx = farmer.idx 
+                    AND farm.idx = nh.farmIdx
+                    AND farm.idx = farm_img.farmIdx
+                    group by idx)AS d 
+                ON bookmark.nhIdx = d.idx`;
+
+            //쿼리 결과 모든 농활 정보
+            let selectNhResult = await db.queryParamArr(selectNhQuery, [userIdx]);
+
+            if(!selectNhResult && !selectAdResult){
+                res.status(500).send({
+                    message : "Internal Server Error"
+                });
+            } else {
+
+                //인기 농활 뽑기 알고리즘 추가
+                //인기 농장 뽑기 알고리즘 추가
+
+                let populNh = selectNhResult;
+                let newNh = getNewNh(selectNhResult);
+                let populFarm = [
+                    {
+                        "idx":2,
+                        "addr":"제주 서귀포시",
+                        "name":"경주 사과농장"
+                    },
+                    {
+                        "idx":2,
+                        "addr":"제주 서귀포시",
+                        "name":"부산 사과농장"
+                    },
+                    {
+                        "idx":2,
+                        "addr":"제주 서귀포시",
+                        "name":"대전 포도농장"
+                    }
+                ];
+
+                res.status(200).send({
+                    message : "Success To Get Information",
+                    "ads": selectAdResult,
+                    "populNh":populNh,
+                    "newNh":newNh,
+                    "populFarm":populFarm
+                })
+            }
+        }
     }
 });
 

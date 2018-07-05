@@ -5,25 +5,19 @@ const crypto = require('crypto-promise');
 const check = require('../../module/check');
 const jwt = require('../../module/jwt');
 
-
-
-/* 테스트용 입니다. */
-router.get('/', (req, res, next) => {
-    res.render('index', { title: 'api/signin' });
-});
-
 //로그인 라우터
 router.post('/', async (req, res, next) => {
 
     //유저mail과 유저pw를 post 방식으로 받음
     let userMail = req.body.email;
     let userPw = req.body.password;
+
     //유저mail와 유저pw가 잘 입력됐는 지 검증
-    //가능하다면 escape
     if (check.checkNull([userMail, userPw])){
         res.status(400).send({
             message: "Null Value"
         })
+
     } else { //잘 입력 됐다면 ...
 
         //1) db에 등록된 유저가 있는 지 검증

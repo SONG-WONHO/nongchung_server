@@ -12,11 +12,6 @@ const activityRouter = require('./activity/index');
 const noteRouter = require('./note/index');
 const mypageRouter = require('./mypage/index');
 
-/* 테스트용 입니다. */
-router.get('/', (req, res, next) => {
-    res.render('index', { title: 'api/index' });
-});
-
 router.use('/signin', signinRouter);
 router.use('/signup', signupRouter);
 router.use('/dup-email', dupEmailRouter);
