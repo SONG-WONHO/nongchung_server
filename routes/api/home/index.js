@@ -11,9 +11,13 @@ router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
 
-//인기농활 얻기
+//인기농활 얻기 - 더미
 function getPopulNh(arr) {
-
+    let populNh = [];
+    for (let i = 0; i < 6; i++){
+        populNh.push(arr[i]);
+    }
+    return populNh;
 }
 
 //최근농활 얻기
@@ -61,17 +65,23 @@ router.get('/', async (req, res, next) => {
         //쿼리 결과 모든 농활 정보
         let selectNhResult = await db.queryParamNone(selectNhQuery);
 
+        //쿼리수행도중 에러가 있다면?
         if(!selectNhResult && !selectAdResult){
             res.status(500).send({
                 message : "Internal Server Error"
             });
-        } else {
+        }
+        //에러가 없을 때
+        else {
 
             //인기 농활 뽑기 알고리즘 추가
             //인기 농장 뽑기 알고리즘 추가
 
-            let populNh = selectNhResult;
+            //인기농활
+            let populNh = getPopulNh(selectNhResult);
+            //새로운농활
             let newNh = getNewNh(selectNhResult);
+            //인기농장
             let populFarm = [
                 {
                     "idx":2,
@@ -99,7 +109,9 @@ router.get('/', async (req, res, next) => {
             })
         }
 
-    } else { //토큰이 있다면? ==> 유저의 찜 상태를 보여줘야 함!
+    }
+    //토큰이 있다면? ==> 유저의 찜 상태를 보여줘야 한다.
+    else {
         let decoded = jwt.verify(token);
 
         //정당하지 않은 토큰이 들어올 때
@@ -108,8 +120,11 @@ router.get('/', async (req, res, next) => {
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
 
-        }else{ //정당한 토큰이 들어왔다면?
+        }
+        //정당한 토큰일 때
+        else{
 
+            //유저 인덱스 얻기
             let userIdx = decoded.user_idx;
 
             //광고 리스트 뽑기
@@ -148,17 +163,23 @@ router.get('/', async (req, res, next) => {
             //쿼리 결과 모든 농활 정보
             let selectNhResult = await db.queryParamArr(selectNhQuery, [userIdx]);
 
+            //쿼리수행도중 에러가 있다면?
             if(!selectNhResult && !selectAdResult){
                 res.status(500).send({
                     message : "Internal Server Error"
                 });
-            } else {
+            }
+            //에러가 없을 때
+            else {
 
                 //인기 농활 뽑기 알고리즘 추가
                 //인기 농장 뽑기 알고리즘 추가
 
-                let populNh = selectNhResult;
+                //인기 농활
+                let populNh = getPopulNh(selectNhResult);
+                //새로운 농활
                 let newNh = getNewNh(selectNhResult);
+                //인기 농장
                 let populFarm = [
                     {
                         "idx":2,
