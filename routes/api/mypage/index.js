@@ -51,19 +51,27 @@ router.put('/nickname',async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let changingQuery = `UPDATE user SET user.nickname = ? WHERE idx =?`;
-            let changingResult = await db.queryParamArr(changingQuery,[nickname,decoded.user_idx]);
-            if(!changingResult){
-                res.status(500).send({
-                    message:"Internal server error"
+            let checkingQuery = `SELECT * FROM user WHERE nickname = ?`;
+            let checkingResult = await db.queryParamArr(checkingQuery,[nickname]);
+            if(checkingResult){
+                res.status(200).send({
+                    message:"duplicate nickname"
                 });
             }else{
+                let changingQuery = `UPDATE user SET user.nickname = ? WHERE idx =?`;
+                let changingResult = await db.queryParamArr(changingQuery,[nickname,decoded.user_idx]);
+                if(!changingResult){
+                    res.status(500).send({
+                        message:"Internal server error"
+                    });
+                }else{
                 //console.log(changingResult.changedRows);
-                res.status(200).send({
-                    message : "Success to change nickname",
-                    data : nickname
+                    res.status(200).send({
+                        message : "Success to change nickname",
+                        data : nickname
                     
-                });
+                    });
+                }
             }
         }
     }
