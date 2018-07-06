@@ -13,14 +13,14 @@ router.get('/', async (req,res)=>{
             message:"fail to show mypage from client, Null value"
         });
     }else{
-        var decoded = jwt.verify(token);
+        let decoded = jwt.verify(token);
         console.log(decoded);
-        if(decoded ==-1){
+        if(decoded ===-1){
             res.status(500).send({
                 message:"token error"
             });
         }else{
-            let mypageshowQuery = `SELECT user.mail, user.name, user.point,user.img 
+            let mypageshowQuery = `SELECT user.mail, user.name, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
             FROM user WHERE user.idx=?`;
             let mypageshowResult = await db.queryParamArr(mypageshowQuery,[decoded.user_idx]);
             if(!mypageshowResult){
