@@ -52,6 +52,7 @@ router.get('/', async (req, res, next) => {
                 let selectScheduleQuery =
                     `SELECT 
                         idx, 
+                        state,
                         date_format(startDate, "%Y-%m-%d") as startDate
                     FROM schedule 
                     WHERE nhIdx = ? 
@@ -94,9 +95,9 @@ router.get('/', async (req, res, next) => {
                 //이미지 뽑기
                 let selectImageQuery =
                     `SELECT img 
-                FROM NONGHWAL.farm_img, nh 
-                WHERE nh.idx = ? 
-                AND nh.farmIdx = farm_img.farmIdx;`;
+                    FROM NONGHWAL.farm_img, nh 
+                    WHERE nh.idx = ? 
+                    AND nh.farmIdx = farm_img.farmIdx;`;
 
                 //이미지 불러오기
                 let selectImageResult = await db.queryParamArr(selectImageQuery, [nhIdx]);
@@ -245,7 +246,8 @@ router.get('/', async (req, res, next) => {
                     let selectScheduleQuery =
                         `SELECT 
                             idx, 
-                            date_format(startDate, "%Y-%m-%d") as startDate
+                            date_format(startDate, "%Y-%m-%d") as startDate,
+                            state
                         FROM schedule 
                         WHERE nhIdx = ? 
                         AND startDate > curdate();`;
@@ -286,8 +288,16 @@ router.get('/', async (req, res, next) => {
 
 
                     //내가 신청한 농활인지 확인하기 - 모든 농활리스트
-                    let checkMineNhQuery = `SELECT scheIdx FROM activity WHERE userIdx = ?`;
-                    let checkMineResult = await db.queryParamArr(checkMineNhQuery, [userIdx]);
+                    let checkMineNhQuery =
+                        `SELECT scheIdx 
+                        FROM activity JOIN (SELECT * FROM NONGHWAL.schedule) 
+                        AS d 
+                        ON d.idx = activity.scheIdx
+                        WHERE nhIdx = ?
+                        AND userIdx = ?
+                        AND d.state = 0
+                        AND activity.state = 0;`;
+                    let checkMineResult = await db.queryParamArr(checkMineNhQuery, [nhIdx, userIdx]);
 
                     //쿼리 수행도중 에러가 있을 때
                     if (!checkMineResult) {
@@ -392,7 +402,7 @@ router.get('/', async (req, res, next) => {
                         "schedule":selectResult,
                         "nearestStartDate":selectScheduleResult[0].startDate,
                         "allStartDate":selectScheduleResult,
-                        "myNhActivities":checkMineNhResult
+                        "myScheduleActivities":checkMineNhResult
                     });
                 }
             }
