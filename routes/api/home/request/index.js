@@ -146,4 +146,74 @@ router.post('/', async (req, res, next) => {
 
 });
 
+//취소하기
+router.put('/', async (req, res, next) => {
+
+    //토큰 받기
+    let token = req.headers.token;
+
+    //토큰이 없을 때
+    if(!token){
+        res.status(400).send({
+            message : "No token"
+        })
+
+    }
+    //토큰이 있을 때
+    else {
+        let decoded = jwt.verify(token);
+        console.log(decoded.user_idx);
+        console.log(decoded);
+        if (decoded === -1) { //올바르지 않은 토큰일 때
+            res.status(500).send({
+                message: "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+            });
+        }
+        else { //정상 사용자일 때
+
+            //농활인덱스, 스케쥴인덱스 받기
+            let nhIdx = req.body.nhIdx;
+            let schIdx = req.body.schIdx;
+            let userIdx = decoded.user_idx;
+
+            console.log(nhIdx, schIdx);
+
+            //빈 값인지 확인
+            if (check.checkNull([nhIdx, schIdx])){
+                res.status(400).send({
+                    message: "Null Value"
+                })
+            }
+            //값이 제대로 들어왔으면?
+            else {
+                let deleteQuery = `DELETE FROM activity WHERE userIdx= ? AND scheIdx = ?;`;
+                let deleteResult = await db.queryParamArr(deleteQuery, [userIdx, schIdx]);
+
+                //쿼리가 제대로 입력 안됐으면
+                if(!deleteResult) {
+                    res.status(500).send({
+                        message : "Internal Server Error"
+                    });
+                    return;
+                }
+
+                let updateQuery = `UPDATE schedule SET person = person - 1 WHERE idx = ?`;
+                let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
+
+                //쿼리가 제대로 입력 안됐으면
+                if(!updateResult) {
+                    res.status(500).send({
+                        message : "Internal Server Error"
+                    });
+                    return;
+                }
+
+                res.status(200).send({
+                    message:"Success To Cancel"
+                })
+            }
+        }
+    }
+});
+
 module.exports = router;
