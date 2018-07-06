@@ -77,7 +77,7 @@ router.get('/', async (req, res, next) => {
 });
 
 //활동한 농활 nhIdx에 속해있는 scheIdx 중에서 본인이 활동한 scheIdx에 리뷰를 추가 
-router.post('/', upload.array('rImages', 20), async (req, res) => {
+router.post('/', upload.array('rImages', 20), async (req, res) => { 
     let token = req.headers.token;
 
     if(!token){

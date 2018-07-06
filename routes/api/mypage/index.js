@@ -20,7 +20,7 @@ router.get('/', async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let mypageshowQuery = `SELECT user.mail,user., user.name, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
+            let mypageshowQuery = `SELECT user.mail, user.name, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
             FROM user WHERE user.idx=?`;
             let mypageshowResult = await db.queryParamArr(mypageshowQuery,[decoded.user_idx]);
             if(!mypageshowResult){
