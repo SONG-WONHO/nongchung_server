@@ -20,6 +20,7 @@ router.get('/', async (req,res)=>{
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
         }else{
+            //규격을 2018-4-12식으로 맞춘 deadline과 농활의 최소값, 스케듈 인덱스, 스케듈 신청한 사람 값 
             let timeQuery = `SELECT date_format(s.deadline, "%Y-%c-%d") AS deadline , n.minPerson, s.idx, s.person
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
@@ -52,6 +53,7 @@ router.get('/', async (req,res)=>{
                         console.log("success"+timeResult[b].idx);
                         var stateQuery1 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
                         var stateResult1 = await db.queryParamArr(stateQuery1,[0,decoded.user_idx,timeResult[b].idx]);
+                    //
                     }
                     else{//안넘었을 때
                         var stateQuery = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
