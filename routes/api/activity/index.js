@@ -89,7 +89,7 @@ router.get('/complete',async (req,res)=>{
             s.person, n.personLimit, s.idx,i.img
             FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
-            AND a.userIdx = u.idx AND u.idx = ? AND a.state = ?`;
+            AND a.userIdx = u.idx AND u.idx = ? AND a.state = ? GROUP BY s.idx`;
             let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`
@@ -211,7 +211,7 @@ router.get('/', async (req,res)=>{
             s.person, n.personLimit, s.idx, i.img
             FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f,NONGHWAL.farm_img AS i, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
-            AND a.userIdx = u.idx AND u.idx = ?`;
+            AND a.userIdx = u.idx AND u.idx = ? GROUP BY s.idx`;
             let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`

@@ -207,6 +207,7 @@ router.put('/photo',upload.single('image'),async (req,res)=>{
     }
 });
 
+//router.get('/myreview')
 
 
 module.exports = router;
