@@ -25,8 +25,10 @@ router.get('/', async (req,res)=>{
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
             let timeResult = await db.queryParamArr(timeQuery,[decoded.user_idx]);
-            console.log(timeResult);
             
+
+
+
 
             let dicTime ={};//마감날짜 딕셔너리만들기
             for(let i = 0; i<timeResult.length; i++){
@@ -55,7 +57,7 @@ router.get('/', async (req,res)=>{
                         var stateResult1 = await db.queryParamArr(stateQuery1,[0,decoded.user_idx,timeResult[b].idx]);
                     //
                     }
-                    else{//안넘었을 때
+                    else{//안 넘었을 때
                         var stateQuery = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
                         var stateResult = await db.queryParamArr(stateQuery,[0,decoded.user_idx,timeResult[b].idx]);
                         
@@ -84,7 +86,9 @@ router.get('/', async (req,res)=>{
             
 
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
-            f.addr, n.period, n.name, a.state
+            f.addr, n.period, n.name, a.state, n.price,
+            abs(n.personLimit - s.person) as currentPerson,
+            s.person, n.personLimit, s.idx
             FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx
             AND a.userIdx = u.idx AND u.idx = ?`;
@@ -92,10 +96,34 @@ router.get('/', async (req,res)=>{
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`
             let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,1]);
-            
-            
             let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx]);
-            if(!activityResult){
+            
+            let reviewQuery = `SELECT r.scheIdx, r.idx  FROM NONGHWAL.review AS r WHERE r.userIdx = ?`;
+            let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
+            
+            let reviewList = [];
+            for(let r = 0; r<reviewResult.length; r++){
+                reviewList.push(reviewResult[r].scheIdx);
+                // 유저의 활동 중에서 state!
+            }
+            activityResult.filter((value, pos) => {
+                if(value.state == 1){
+                    console.log("sese"+value.idx);
+                        if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
+                            value.rState = 1;
+                            
+                        }else{//없으면
+                            value.rState = 0;
+                        }
+                }
+            });
+    
+
+
+
+
+
+            if(!activityResult&&!totalResult&&!reviewResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
