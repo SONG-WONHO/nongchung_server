@@ -28,23 +28,6 @@ router.get('/complete',async (req,res)=>{
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
             let timeResult = await db.queryParamArr(timeQuery,[decoded.user_idx]);
             
-
-
-
-/*
-            let dicTime ={};//마감날짜 딕셔너리만들기
-            
-            for(let i = 0; i<timeResult.length; i++){
-                dicTime[timeResult[i].idx]= timeResult[i].deadline;
-                
-                if(moment().format("YYYY-M-DD")<timeResult[i].deadline){//현재보다 작음
-                    console.log(timeResult[i].deadline+" "+"seolw");
-                }
-                console.log(dicTime);
-
-                
-            }//키값: 농활스케듈 인덱스, 벨류값: 마감날짜
-*/
             let dicMinPerson={};//농활최소인원 딕셔너리 만들기
             for(let j = 0; j<timeResult.length ; j++){
                 dicMinPerson[timeResult[j].idx]=timeResult[j].minPerson;
@@ -79,7 +62,9 @@ router.get('/complete',async (req,res)=>{
                     WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
                     let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
                 }
+                
             }
+            
 
             
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
@@ -111,7 +96,7 @@ router.get('/complete',async (req,res)=>{
                     value.rState = 0;
                 }
             });
-            if(!activityResult || !totalResult ||!reviewResult || !timeResult ){
+            if(!activityResult || !totalResult ||!reviewResult || !timeResult || !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
@@ -149,19 +134,7 @@ router.get('/', async (req,res)=>{
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
             let timeResult = await db.queryParamArr(timeQuery,[decoded.user_idx]);
             
-/*
 
-            let dicTime ={};//마감날짜 딕셔너리만들기
-            for(let i = 0; i<timeResult.length; i++){
-                dicTime[timeResult[i].idx]= new Date(timeResult[i].deadline).toISOString()
-                //(Date(timeResult[i].deadline)).format("yyyy-dd-mm");
-                
-                if(moment().format("YYYY-M-DD")<timeResult[i].deadline){
-                    console.log(timeResult[i].deadline+" "+"seolw");
-                }
-                
-            }//키값: 농활스케듈 인덱스, 벨류값: 마감날짜
-*/
             let dicMinPerson={};//농활최소인원 딕셔너리 만들기
             for(let j = 0; j<timeResult.length ; j++){
                 dicMinPerson[timeResult[j].idx]=timeResult[j].minPerson;
@@ -197,6 +170,7 @@ router.get('/', async (req,res)=>{
                     let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
                 }
             }
+            
 
             
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
@@ -222,7 +196,7 @@ router.get('/', async (req,res)=>{
             }
             activityResult.filter((value, pos) => {
                 if(value.state == 1){
-                    console.log("sese"+value.idx);
+                    //console.log("sese"+value.idx);
                         if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
                             value.rState = 1;
                             
@@ -231,7 +205,7 @@ router.get('/', async (req,res)=>{
                         }
                 }
             });
-            if(!activityResult || !totalResult ||!reviewResult || !timeResult){
+            if(!activityResult || !totalResult ||!reviewResult || !timeResult || !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });

@@ -37,7 +37,7 @@ router.post('/', async (req, res, next) => {
             if (hashedpw.toString('base64') === checkResult[0].pw){ //같다면?
 
                 let token = jwt.sign(checkResult[0].idx);
-                let InfoshowQuery = `SELECT user.mail, user.name, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
+                let InfoshowQuery = `SELECT user.mail, user.name,user.birth,user.sex,user.hp, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
             FROM NONGHWAL.user WHERE user.idx = (SELECT user.idx FROM NONGHWAL.user WHERE user.mail = ?)`;
                 let InfoshowResult = await db.queryParamArr(InfoshowQuery,[userMail]);
 

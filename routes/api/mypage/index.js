@@ -53,7 +53,7 @@ router.put('/nickname',async (req,res)=>{
         }else{
             let checkingQuery = `SELECT * FROM user WHERE nickname = ?`;
             let checkingResult = await db.queryParamArr(checkingQuery,[nickname]);
-            console.log(checkingResult[0]);
+            
             if(checkingResult.length >= 1){
                 
                 res.status(200).send({
@@ -67,7 +67,7 @@ router.put('/nickname',async (req,res)=>{
                         message:"Internal server error"
                     });
                 }else{
-                //console.log(changingResult.changedRows);
+                
                     res.status(200).send({
                         message : "Success to change nickname",
                         data : nickname
@@ -105,12 +105,12 @@ router.put('/password', async (req,res)=>{
                 });
             }else{
                 if(hashedpw.toString('base64')===checkResult[0].pw){
-                    //console.log(hashedpw.toString('base64'));
+                    
                     const salt = await crypto.randomBytes(32);
                     const hashednewpw = await crypto.pbkdf2(newpw, salt.toString('base64'), 100000, 32, 'sha512');
                     let newpwQuery = `UPDATE user SET user.pw =?, user.salt=? WHERE user.idx = ?`;
                     let newpwResult = await db.queryParamArr(newpwQuery,[hashednewpw.toString('base64'),salt.toString('base64'),decoded.user_idx]);
-                    //console.log(hashednewpw.toString('base64'));
+                    
                     if(!newpwResult){
                         res.status(500).send({
                             message:"Internal server error"
@@ -152,13 +152,13 @@ router.get('/point',async (req,res)=>{
             let pointResult = await db.queryParamArr(pointQuery,[decoded.user_idx]);
             let pointAddQuery = `UPDATE user SET user.point = ? WHERE user.idx = ?`;
             let pointAddResult = await db.queryParamArr(pointAddQuery,[pointResult[0].point,decoded.user_idx]);
-            console.log(pointResult);
+            
             let infoQuery = `SELECT f.addr, n.name, n.point,SUBSTRING_INDEX(GROUP_CONCAT(i.img SEPARATOR '|'),"|",1) AS img
             FROM NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.activity AS a, NONGHWAL.user AS u, NONGHWAL.farm_img AS i
             WHERE f.idx = n.farmIdx AND a.scheIdx = s.idx AND s.nhIdx = n.idx AND f.idx = i.farmIdx
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1 GROUP BY i.farmIdx`;
             let infoResult = await db.queryParamArr(infoQuery,[decoded.user_idx])
-            //console.log(infoResult);
+            
             if(!pointResult || !infoResult){
                 res.status(500).send({
                     message:"Internal server error"
@@ -207,7 +207,47 @@ router.put('/photo',upload.single('image'),async (req,res)=>{
     }
 });
 
-//router.get('/myreview')
+router.get('/myreview', async (req,res)=>{
+    var token = req.headers.token;
+    if(!token){
+        res.status(400).send({
+            message:"Null value"
+        });
+    }else{
+        var decoded = jwt.verify(token);
+        if(!decoded){
+            res.status(500).send({
+                message:"token error"
+            });
+        }else{
+            let reviewQuery = `SELECT u.img, u.name, r.content, r.star,date_format(s.startDate, "%Y-%c-%d") AS startDate, r.img
+            FROM NONGHWAL.review AS r, NONGHWAL.user AS u, NONGHWAL.schedule AS s
+            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND u.idx = ? GROUP BY r.idx`;
+            let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
+            for(let a = 0; a<reviewResult.length;a++){
+                var b = reviewResult[a].img;
+                var c = reviewResult[a].startDate;
+                reviewResult[a].img = b.split(",");
+                var aaa= c.split("-");
+                var date = aaa[0]+"년 "+aaa[1]+"월 "+aaa[2]+"일";
+                reviewResult[a].startDate =date;
+            }
+            
+            if(!reviewResult){
+                res.status(500).send({
+                    message:"Internal server Error"
+                });
+            }else{
+                res.status(200).send({
+                    message:"success To show review",
+                    data : reviewResult
+                });
+
+            }
+
+        }
+    }
+});
 
 
 module.exports = router;
