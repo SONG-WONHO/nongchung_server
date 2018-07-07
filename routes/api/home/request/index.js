@@ -86,7 +86,7 @@ router.post('/', async (req, res, next) => {
                         } else {
                             //유저가 들어갈 자리가 있는가?
                             selectQuery =
-                                `SELECT (nh.personLimit - schedule.person) > ? AS isAvailPerson 
+                                `SELECT (nh.personLimit - schedule.person) > ? AS isAvailPerson, nh.personLimit, schedule.person 
                                 FROM schedule, nh 
                                 WHERE schedule.nhIdx = nh.idx 
                                 AND nh.idx = ? 
@@ -128,7 +128,9 @@ router.post('/', async (req, res, next) => {
                                     }
 
                                     res.status(200).send({
-                                        message: "Success To Request For Application"
+                                        message: "Success To Request For Application",
+                                        maxPerson: selectResult[0].personLimit,
+                                        currentPerson:selectResult[0].person + 1
                                     })
                                 } else {
                                     res.status(400).send({
