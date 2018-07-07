@@ -53,7 +53,9 @@ router.put('/nickname',async (req,res)=>{
         }else{
             let checkingQuery = `SELECT * FROM user WHERE nickname = ?`;
             let checkingResult = await db.queryParamArr(checkingQuery,[nickname]);
-            if(checkingResult){
+            console.log(checkingResult[0]);
+            if(checkingResult.length >= 1){
+                
                 res.status(200).send({
                     message:"duplicate nickname"
                 });
