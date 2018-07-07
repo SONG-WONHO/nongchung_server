@@ -131,7 +131,7 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                     joinedImages = tempArr.join(',');
 
                     let insertReviewQuery = `INSERT INTO review (img, userIdx, content, scheIdx, star)
-                    VALUES (?, ?, ?, ?, ?)`
+                    VALUES (?, ?, ?, ?, ?)`;
 
                     let insertReview = await db.queryParamArr(insertReviewQuery, [joinedImages, decoded.user_idx, content, 
                     scheIdx, star]);

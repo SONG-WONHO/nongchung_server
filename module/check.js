@@ -12,5 +12,14 @@ module.exports = {
         }
 
         return 0;
+    },
+
+    checkMapRangeOut : (value) => {
+
+        if (value >= 0 && value < 16) {
+            return false;
+        } else {
+            return true;
+        }
     }
 };
