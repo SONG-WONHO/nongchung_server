@@ -31,16 +31,20 @@ router.get('/complete',async (req,res)=>{
 
 
 
-
+/*
             let dicTime ={};//마감날짜 딕셔너리만들기
+            
             for(let i = 0; i<timeResult.length; i++){
                 dicTime[timeResult[i].idx]= timeResult[i].deadline;
-                /*if(moment().format("YYYY-M-DD")<timeResult[i].deadline){
+                
+                if(moment().format("YYYY-M-DD")<timeResult[i].deadline){//현재보다 작음
                     console.log(timeResult[i].deadline+" "+"seolw");
-                }*/
+                }
+                console.log(dicTime);
+
                 
             }//키값: 농활스케듈 인덱스, 벨류값: 마감날짜
-
+*/
             let dicMinPerson={};//농활최소인원 딕셔너리 만들기
             for(let j = 0; j<timeResult.length ; j++){
                 dicMinPerson[timeResult[j].idx]=timeResult[j].minPerson;
@@ -51,37 +55,32 @@ router.get('/complete',async (req,res)=>{
                 dicSchePerson[timeResult[a].idx] = timeResult[a].person;
             }//키값: 농활스케듈 인덱스, 벨류값: 농활스케쥴에 참여한 인원
 
-            for(let b = 0; b<timeResult.length ; b++){//취소 2 , 완료 1, 신청중 0
-                if(dicTime[timeResult[b].idx]>moment().format("YYYY-M-DD")){//데드라인 안 지났을 때
-                    if(dicSchePerson[timeResult[b].idx]>dicMinPerson[timeResult[b].idx]){//인원 넘었을 때
-                        
-                        var stateQuery1 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult1 = await db.queryParamArr(stateQuery1,[0,decoded.user_idx,timeResult[b].idx]);
-                    //
-                    }
-                    else{//안 넘었을 때
-                        var stateQuery = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult = await db.queryParamArr(stateQuery,[0,decoded.user_idx,timeResult[b].idx]);
-                        
-                    }
-                    
+            //취소 2 , 완료 1, 신청중 0
+            let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
+            ON a.scheIdx = s.idx 
+            SET a.state = ?
+            WHERE s.deadline > CURDATE()`; //데드라인이 안넘는 것
+            let stateResult = await db.queryParamArr(stateQuery,[0]);
+            for(let a= 0 ;a<timeResult.length; a++){
+                if(dicSchePerson[timeResult[a].idx]>dicMinPerson[timeResult[a].idx]){
+                    let stateQuery2 = `
+                    UPDATE NONGHWAL.activity AS a
+                    JOIN NONGHWAL.schedule AS s 
+                    ON a.scheIdx = s.idx 
+                    SET a.state = ?
+                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 넘은 것
+                    let stateResult2 = await db.queryParamArr(stateQuery2,[1,timeResult[a].idx]);
+                }else{
+                    let stateQuery1 = `
+                    UPDATE NONGHWAL.activity AS a
+                    JOIN NONGHWAL.schedule AS s 
+                    ON a.scheIdx = s.idx 
+                    SET a.state = ?
+                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
+                    let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
                 }
-                else{//지났을 때
-                    if(dicSchePerson[timeResult[b].idx]>dicMinPerson[timeResult[b].idx]){//인원이 넘었을 때
-                        
-                        var stateQuery2 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult2 = await db.queryParamArr(stateQuery2,[1,decoded.user_idx,timeResult[b].idx]);
-                        
-    
-                    }
-                    else{//인원이 안 넘었을 때
-                        
-                        var stateQuery2 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult2 = await db.queryParamArr(stateQuery2,[2,decoded.user_idx,timeResult[b].idx]);
-                        
-                    }
-                }              
             }
+
             
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
@@ -112,7 +111,7 @@ router.get('/complete',async (req,res)=>{
                     value.rState = 0;
                 }
             });
-            if(!activityResult&&!totalResult&&!reviewResult){
+            if(!activityResult || !totalResult ||!reviewResult || !timeResult ){
                 res.status(500).send({
                     message:"Internal server error"
                 });
@@ -150,19 +149,19 @@ router.get('/', async (req,res)=>{
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
             let timeResult = await db.queryParamArr(timeQuery,[decoded.user_idx]);
             
-
-
-
+/*
 
             let dicTime ={};//마감날짜 딕셔너리만들기
             for(let i = 0; i<timeResult.length; i++){
-                dicTime[timeResult[i].idx]= timeResult[i].deadline;
-                /*if(moment().format("YYYY-M-DD")<timeResult[i].deadline){
+                dicTime[timeResult[i].idx]= new Date(timeResult[i].deadline).toISOString()
+                //(Date(timeResult[i].deadline)).format("yyyy-dd-mm");
+                
+                if(moment().format("YYYY-M-DD")<timeResult[i].deadline){
                     console.log(timeResult[i].deadline+" "+"seolw");
-                }*/
+                }
                 
             }//키값: 농활스케듈 인덱스, 벨류값: 마감날짜
-
+*/
             let dicMinPerson={};//농활최소인원 딕셔너리 만들기
             for(let j = 0; j<timeResult.length ; j++){
                 dicMinPerson[timeResult[j].idx]=timeResult[j].minPerson;
@@ -173,37 +172,32 @@ router.get('/', async (req,res)=>{
                 dicSchePerson[timeResult[a].idx] = timeResult[a].person;
             }//키값: 농활스케듈 인덱스, 벨류값: 농활스케쥴에 참여한 인원
 
-            for(let b = 0; b<timeResult.length ; b++){//취소 2 , 완료 1, 신청중 0
-                if(dicTime[timeResult[b].idx]>moment().format("YYYY-M-DD")){//데드라인 안 지났을 때
-                    if(dicSchePerson[timeResult[b].idx]>dicMinPerson[timeResult[b].idx]){//인원 넘었을 때
-                        console.log("success"+timeResult[b].idx);
-                        var stateQuery1 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult1 = await db.queryParamArr(stateQuery1,[0,decoded.user_idx,timeResult[b].idx]);
-                    //
-                    }
-                    else{//안 넘었을 때
-                        var stateQuery = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult = await db.queryParamArr(stateQuery,[0,decoded.user_idx,timeResult[b].idx]);
-                        
-                    }
-                    
+                    //취소 2 , 완료 1, 신청중 0
+            let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
+            ON a.scheIdx = s.idx 
+            SET a.state = ?
+            WHERE s.deadline > CURDATE()`; //데드라인이 안넘는 것
+            let stateResult = await db.queryParamArr(stateQuery,[0]);
+            for(let a= 0 ;a<timeResult.length; a++){
+                if(dicSchePerson[timeResult[a].idx]>dicMinPerson[timeResult[a].idx]){
+                    let stateQuery2 = `
+                    UPDATE NONGHWAL.activity AS a
+                    JOIN NONGHWAL.schedule AS s 
+                    ON a.scheIdx = s.idx 
+                    SET a.state = ?
+                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 넘은 것
+                    let stateResult2 = await db.queryParamArr(stateQuery2,[1,timeResult[a].idx]);
+                }else{
+                    let stateQuery1 = `
+                    UPDATE NONGHWAL.activity AS a
+                    JOIN NONGHWAL.schedule AS s 
+                    ON a.scheIdx = s.idx 
+                    SET a.state = ?
+                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
+                    let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
                 }
-                else{//지났을 때
-                    if(dicSchePerson[timeResult[b].idx]>dicMinPerson[timeResult[b].idx]){//인원이 넘었을 때
-                        
-                        var stateQuery2 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult2 = await db.queryParamArr(stateQuery2,[1,decoded.user_idx,timeResult[b].idx]);
-                        
-    
-                    }
-                    else{//인원이 안 넘었을 때
-                        console.log("fail"+timeResult[b].idx);
-                        var stateQuery2 = `UPDATE activity SET state = ? WHERE userIdx = ? AND scheIdx = ?`;
-                        var stateResult2 = await db.queryParamArr(stateQuery2,[2,decoded.user_idx,timeResult[b].idx]);
-                        
-                    }
-                }              
             }
+
             
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
@@ -237,7 +231,7 @@ router.get('/', async (req,res)=>{
                         }
                 }
             });
-            if(!activityResult&&!totalResult&&!reviewResult){
+            if(!activityResult || !totalResult ||!reviewResult || !timeResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
