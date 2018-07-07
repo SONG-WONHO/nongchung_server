@@ -86,9 +86,9 @@ router.get('/complete',async (req,res)=>{
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
             abs(n.personLimit - s.person) as currentPerson,
-            s.person, n.personLimit, s.idx
-            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx
+            s.person, n.personLimit, s.idx,i.img
+            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
             AND a.userIdx = u.idx AND u.idx = ? AND a.state = ?`;
             let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
@@ -208,9 +208,9 @@ router.get('/', async (req,res)=>{
             let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
             abs(n.personLimit - s.person) as currentPerson,
-            s.person, n.personLimit, s.idx
-            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx
+            s.person, n.personLimit, s.idx, i.img
+            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f,NONGHWAL.farm_img AS i, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
             AND a.userIdx = u.idx AND u.idx = ?`;
             let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
