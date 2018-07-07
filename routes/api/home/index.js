@@ -4,12 +4,14 @@ const db = require('../../../module/db');
 const jwt = require('../../../module/jwt');
 
 const searchRouter = require('./search');
+const mapRouter = require('./map');
 const detailRouter = require('./detail/index');
 const requestRouter = require('./request/index');
 
 router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
+router.use('/map', mapRouter);
 
 //인기농활 얻기 - 더미
 function getPopulNh(arr) {

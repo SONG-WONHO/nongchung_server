@@ -11,6 +11,8 @@ router.get('/', async (req, res, next) => {
     let endDate = req.query.end || "2500-01-01";
     let person = req.query.person || 0;
     let searchContent = req.query.scontent || "";
+    let areaList = req.query.area;
+
 
     console.log(startDate, endDate, person, searchContent);
 
@@ -92,7 +94,8 @@ router.get('/', async (req, res, next) => {
             nh.star, 
             nh.period, 
             farm.addr, 
-            substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
+            substring_index(group_concat(farm_img.img separator ','), ',', 1) as img,
+            farm.addrIdx  
         FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
         WHERE farm.farmerIdx = farmer.idx 
         AND farm.idx = nh.farmIdx
@@ -113,10 +116,36 @@ router.get('/', async (req, res, next) => {
                 message : "Internal Server Error"
             })
         } else {
-            res.status(200).send({
-                "message" : "Success To Get Search",
-                "data": selectResult
-            })
+
+            //지역을 입력 했다면?
+            if(areaList) {
+
+                areaList[0] = areaList[0][1];
+                areaList[areaList.length -1] = areaList[areaList.length -1][0];
+
+                //지역필터 추가
+                selectResult = selectResult.filter((value) => {
+                    console.log(value.addrIdx);
+                    console.log(areaList.indexOf(value.addrIdx));
+                   if (areaList.indexOf(value.addrIdx) !== -1) {
+                       return true;
+                   }
+                });
+
+                res.status(200).send({
+                    message: "Success To Get Search",
+                    data: selectResult
+                })
+
+            }
+            //지역입력이 없다면?
+            else {
+
+                res.status(200).send({
+                    "message" : "Success To Get Search",
+                    "data": selectResult
+                })
+            }
         }
     }
 });
