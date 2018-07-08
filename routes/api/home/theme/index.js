@@ -3,39 +3,31 @@ const router = express.Router();
 const db = require('../../../../module/db');
 const jwt = require('../../../../module/jwt');
 
-router.get('/', async (req, res, next) => {
-    let nhTheme = [
-        {
-            "idx":1,
-            "img" :"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1531065972519.ab.png"
-            
-        },
-        {
-            "idx":2,
-            "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1531065972519.ab.png"
-            
-        },
-        {
-            "idx":3,
-            "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1531065972519.ab.png"
-            
-        },
-        {
-            "idx":4,
-            "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1531065972519.ab.png"
-            
-        },
-        {
-            "idx":5,
-            "img":"https://nonghwal.s3.ap-northeast-2.amazonaws.com/user/1531065972519.ab.png"
+router.get('/:idx',async (req,res)=>{
+    var tIdx = req.params.idx;
+    if(!tIdx){
+        res.status(400).send({
+            message: "Null Value"
+        });
+    }else{
+        let showThemeQuery =`SELECT h.img AS farmerImg, f.addr, n.name, n.price, n.period,n.idx AS nIdx,
+        substring_index(group_concat(i.img separator ','), ',', 1) AS fImg
+        FROM NONGHWAL.farmer as h, NONGHWAL.nh AS n, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i 
+        WHERE h.idx = f.farmerIdx AND n.farmIdx = f.idx AND i.farmIdx = f.idx AND n.theme=? group by n.idx`;
+        let showThemeResult = await db.queryParamArr(showThemeQuery,[tIdx]);
+        if(!showThemeResult){
+            res.status(500).send({
+                message:"Internal server error!"
+            });
+        }else{
+            res.status(200).send({
+                message: "Success To show themeList",
+                data:showThemeResult
+            });
         }
-    ];//테마별 농활 사진 보내주는 더미데이터
-
-    res.status(200).send({
-        message: "success To show THEME",
-        data:nhTheme
-    });
+    }
 });
+
 
 
 module.exports = router;
