@@ -14,7 +14,6 @@ router.get("/", async (req, res, next) => {
 
         //어떤 농활인 지 받기
         let nhIdx = req.query.idx ;
-        nhIdx = nhIdx * 1;
 
         //비어있는 값인지 검증
         if(check.checkNull([nhIdx])) {
@@ -24,6 +23,7 @@ router.get("/", async (req, res, next) => {
         }
         //정상적으로 들어왔다면?
         else {
+            nhIdx = nhIdx * 1;
 
             //정당한 농활인 지 검증하기
             let selectQuery = "SELECT * FROM nh_popular WHERE idx = ?";
