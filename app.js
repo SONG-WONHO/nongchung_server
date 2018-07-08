@@ -6,6 +6,8 @@ const logger = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+//매일매일 실행할 작업
+// const scheduler = require('./module/schdule');
 
 const indexRouter = require('./routes/index');
 

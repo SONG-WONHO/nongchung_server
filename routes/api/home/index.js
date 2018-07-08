@@ -7,30 +7,14 @@ const searchRouter = require('./search');
 const mapRouter = require('./map');
 const detailRouter = require('./detail/index');
 const requestRouter = require('./request/index');
+const moreRouter = require('./more/index');
 
 router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
 router.use('/map', mapRouter);
+router.use('/more', moreRouter);
 
-//인기농활 얻기 - 더미
-function getPopulNh(arr) {
-    let populNh = [];
-    for (let i = 0; i < 6; i++){
-        populNh.push(arr[i]);
-    }
-    return populNh;
-}
-
-//최근농활 얻기
-function getNewNh(arr) {
-    let newNh = [];
-    //농활 리스트 중 가장 나중것 6개 추가하기
-    for (let i = 1; i < 7; i++){
-        newNh.push(arr.slice(i* -1)[0]);
-    }
-    return newNh;
-}
 
 router.get('/', async (req, res, next) => {
 
@@ -48,41 +32,21 @@ router.get('/', async (req, res, next) => {
         //광고리스트
         let selectAdResult = await db.queryParamNone(selectAdQuery);
 
-        //모든 농활 뽑기
-        let selectNhQuery =
-            `SELECT 
-                nh.idx, 
-                nh.name, 
-                nh.price, 
-                nh.star, 
-                nh.period, 
-                farm.addr, 
-                substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
-            FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
-            WHERE farm.farmerIdx = farmer.idx 
-            AND farm.idx = nh.farmIdx
-            AND farm.idx = farm_img.farmIdx
-            group by idx`;
+        //인기농활뽑기
+        let selectPopulNhQuery = `SELECT * FROM nh_popular limit 0,6`;
+        //새로운농활뽑기
+        let selectNewNhQuery = `SELECT * FROM nh_new limit 0,6`;
 
-        //쿼리 결과 모든 농활 정보
-        let selectNhResult = await db.queryParamNone(selectNhQuery);
+        let selectPopulNhResult = await db.queryParamNone(selectPopulNhQuery);
+        let selectNewNhResult = await db.queryParamNone(selectNewNhQuery);
 
-        //쿼리수행도중 에러가 있다면?
-        if(!selectNhResult && !selectAdResult){
+        if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult) {
             res.status(500).send({
                 message : "Internal Server Error"
             });
         }
-        //에러가 없을 때
         else {
 
-            //인기 농활 뽑기 알고리즘 추가
-            //인기 농장 뽑기 알고리즘 추가
-
-            //인기농활
-            let populNh = getPopulNh(selectNhResult);
-            //새로운농활
-            let newNh = getNewNh(selectNhResult);
             //인기농장
             let populFarm = [
                 {
@@ -105,13 +69,13 @@ router.get('/', async (req, res, next) => {
             res.status(200).send({
                 message : "Success To Get Information",
                 "ads": selectAdResult,
-                "populNh":populNh,
-                "newNh":newNh,
+                "populNh":selectPopulNhResult,
+                "newNh": selectNewNhResult,
                 "populFarm":populFarm
             })
         }
-
     }
+
     //토큰이 있다면? ==> 유저의 찜 상태를 보여줘야 한다.
     else {
         let decoded = jwt.verify(token);
@@ -134,53 +98,27 @@ router.get('/', async (req, res, next) => {
             //광고리스트
             let selectAdResult = await db.queryParamNone(selectAdQuery);
 
-            //모든 농활 뽑기
-            let selectNhQuery =
-                `SELECT 
-                    idx, 
-                    name, 
-                    price, 
-                    star, 
-                    period, 
-                    addr, 
-                    img, 
-                    if(userIdx = ?, 1, 0) AS isBooked 
-                FROM NONGHWAL.bookmark 
-                RIGHT JOIN 
-                    (SELECT 
-                        nh.idx, 
-                        nh.name, 
-                        nh.price, 
-                        nh.star, 
-                        nh.period, 
-                        farm.addr, 
-                        substring_index(group_concat(farm_img.img separator ','), ',', 1) as img
-                    FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh, NONGHWAL.farm_img
-                    WHERE farm.farmerIdx = farmer.idx 
-                    AND farm.idx = nh.farmIdx
-                    AND farm.idx = farm_img.farmIdx
-                    group by idx)AS d 
-                ON bookmark.nhIdx = d.idx`;
 
-            //쿼리 결과 모든 농활 정보
-            let selectNhResult = await db.queryParamArr(selectNhQuery, [userIdx]);
+            //인기농활뽑기
+            let selectPopulNhQuery =
+                `SELECT name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                FROM NONGHWAL.nh_popular 
+                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_popular.nhIdx limit 0, 6;`;
+            //새로운농활뽑기
+            let selectNewNhQuery =
+                `SELECT name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                FROM NONGHWAL.nh_new
+                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_new.nhIdx limit 0, 6;`;
 
-            //쿼리수행도중 에러가 있다면?
-            if(!selectNhResult && !selectAdResult){
+            let selectPopulNhResult = await db.queryParamArr(selectPopulNhQuery, [userIdx, userIdx]);
+            let selectNewNhResult = await db.queryParamArr(selectNewNhQuery, [userIdx, userIdx]);
+
+            if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult) {
                 res.status(500).send({
                     message : "Internal Server Error"
                 });
             }
-            //에러가 없을 때
             else {
-
-                //인기 농활 뽑기 알고리즘 추가
-                //인기 농장 뽑기 알고리즘 추가
-
-                //인기 농활
-                let populNh = getPopulNh(selectNhResult);
-                //새로운 농활
-                let newNh = getNewNh(selectNhResult);
                 //인기 농장
                 let populFarm = [
                     {
@@ -203,8 +141,8 @@ router.get('/', async (req, res, next) => {
                 res.status(200).send({
                     message : "Success To Get Information",
                     "ads": selectAdResult,
-                    "populNh":populNh,
-                    "newNh":newNh,
+                    "populNh":selectPopulNhResult,
+                    "newNh":selectNewNhResult,
                     "populFarm":populFarm
                 })
             }
