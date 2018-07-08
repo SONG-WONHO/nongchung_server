@@ -53,6 +53,11 @@ router.get('/complete',async (req,res)=>{
                     SET a.state = ?
                     WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 넘은 것
                     let stateResult2 = await db.queryParamArr(stateQuery2,[1,timeResult[a].idx]);
+                    if(!stateResult2){
+                        res.status(500).send({
+                            message:"Internal server error!"
+                        });
+                    }
                 }else{
                     let stateQuery1 = `
                     UPDATE NONGHWAL.activity AS a
@@ -61,7 +66,13 @@ router.get('/complete',async (req,res)=>{
                     SET a.state = ?
                     WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
                     let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
+                    if(!stateResult2){
+                        res.status(500).send({
+                            message:"Internal server error!"
+                        });
+                    }
                 }
+                
                 
             }
             
@@ -84,6 +95,7 @@ router.get('/complete',async (req,res)=>{
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
             
             let reviewList = [];
+            
             for(let r = 0; r<reviewResult.length; r++){
                 reviewList.push(reviewResult[r].scheIdx);
                 // 유저의 활동 중에서 state!
@@ -103,7 +115,7 @@ router.get('/complete',async (req,res)=>{
             }else{
                 res.status(200).send({
                     message:"success to show activity",
-                    total : totalResult,
+                    total : totalResult[0],
                     data : activityResult
                 });
             }
