@@ -132,9 +132,9 @@ router.post('/', async (req, res) => {
             } else{
 
                 //찜한 농활이 이미 북마크에 존재하는지 확인하는 쿼리
-                let checkExistInBmListQuery = "SELECT nhIdx FROM bookmark WHERE nhIdx = ?"
+                let checkExistInBmListQuery = "SELECT nhIdx FROM bookmark WHERE nhIdx = ? AND userIdx = ?"
 
-                let checkExistInBmList = await db.queryParamArr(checkExistInBmListQuery, [nhIdx]);
+                let checkExistInBmList = await db.queryParamArr(checkExistInBmListQuery, [nhIdx, decoded.user_idx]);
 
                 if(!checkExistInBmList){
                     res.status(500).send({
