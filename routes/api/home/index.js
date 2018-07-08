@@ -8,12 +8,14 @@ const mapRouter = require('./map');
 const detailRouter = require('./detail/index');
 const requestRouter = require('./request/index');
 const moreRouter = require('./more/index');
+const themeRouter = require('./theme/index');
 
 router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
 router.use('/map', mapRouter);
 router.use('/more', moreRouter);
+router.use('/theme', themeRouter);
 
 
 router.get('/', async (req, res, next) => {
