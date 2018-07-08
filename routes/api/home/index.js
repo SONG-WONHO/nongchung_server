@@ -101,12 +101,12 @@ router.get('/', async (req, res, next) => {
 
             //인기농활뽑기
             let selectPopulNhQuery =
-                `SELECT name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                `SELECT nh_popular.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
                 FROM NONGHWAL.nh_popular 
                 LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_popular.nhIdx limit 0, 6;`;
             //새로운농활뽑기
             let selectNewNhQuery =
-                `SELECT name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                `SELECT nh_new.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
                 FROM NONGHWAL.nh_new
                 LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_new.nhIdx limit 0, 6;`;
 
