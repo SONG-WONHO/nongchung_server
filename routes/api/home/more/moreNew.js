@@ -51,12 +51,13 @@ router.get("/", async (req, res, next) => {
                 let selectQuery = `SELECT * FROM nh_new limit ?,6`;
                 let selectResult = await db.queryParamArr(selectQuery, [nhIdx]);
 
-                let isEnd = selectResult.length;
+                let isEnd = 0;
 
-                if (isEnd !== 6) {
+                let checkQuery = `SELECT idx FROM nh_new idx = ?`;
+                let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+
+                if (checkResult.length === 0) {
                     isEnd = 1;
-                } else {
-                    isEnd = 0;
                 }
 
                 if (!selectResult) {
@@ -135,12 +136,13 @@ router.get("/", async (req, res, next) => {
 
                     let selectResult = await db.queryParamArr(selectQuery, [userIdx, userIdx, nhIdx]);
 
-                    let isEnd = selectResult.length;
+                    let isEnd = 0;
 
-                    if (isEnd !== 6) {
+                    let checkQuery = `SELECT idx FROM nh_new idx = ?`;
+                    let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+
+                    if (checkResult.length === 0) {
                         isEnd = 1;
-                    } else {
-                        isEnd = 0;
                     }
                     console.log(selectResult);
 
