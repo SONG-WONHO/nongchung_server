@@ -129,7 +129,7 @@ router.get("/", async (req, res, next) => {
                 //에러가 없을 때 - 정당한 농활 인덱스라면?
                 else {
                     let selectQuery =
-                        `SELECT name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                        `SELECT nh_new.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
                         FROM NONGHWAL.nh_new
                         LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_new.nhIdx limit ?, 6;`;
 
