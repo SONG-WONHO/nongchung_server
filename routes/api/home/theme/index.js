@@ -10,8 +10,11 @@ router.get('/:idx',async (req,res)=>{
             message: "Null Value"
         });
     }else{
-        let showThemeQuery =`SELECT h.img AS farmerImg, f.addr, n.name, n.price, n.period,n.idx AS nIdx,
-        substring_index(group_concat(i.img separator ','), ',', 1) AS fImg
+        let showThemeQuery =`SELECT h.img AS farmerImg, f.addr, n.name, n.price, n.period,
+        substring_index(group_concat(i.img separator ','), ',', 1) AS fImg,
+        CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > n.wtime THEN 0
+        ELSE 1
+        END AS 'newState'
         FROM NONGHWAL.farmer as h, NONGHWAL.nh AS n, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i 
         WHERE h.idx = f.farmerIdx AND n.farmIdx = f.idx AND i.farmIdx = f.idx AND n.theme=? group by n.idx`;
         let showThemeResult = await db.queryParamArr(showThemeQuery,[tIdx]);
