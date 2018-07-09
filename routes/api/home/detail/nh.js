@@ -247,7 +247,7 @@ router.get('/', async (req, res, next) => {
                     //모든 스케쥴 뽑기
                     let selectScheduleQuery =
                         `SELECT 
-                            nh.idx, 
+                            schedule.idx, 
                             date_format(startDate, "%Y-%m-%d") as startDate,
                             state,
                             (personLimit - person) AS availPerson
