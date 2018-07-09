@@ -201,6 +201,16 @@ router.put('/', async (req, res, next) => {
 
                 let updateQuery = `UPDATE schedule SET person = person - 1 WHERE idx = ?`;
                 let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
+                let selectQuery = `SELECT a.scheIdx AS myScheIdx FROM NONGHWAL.activity AS a, NONGHWAL.user AS u WHERE a.userIdx = u.idx AND u.idx = ?`;
+                let selectResult = await db.queryParamArr(selectQuery,[decoded.user_idx]);
+                let myScheIdx1 = [];
+                console.log(selectResult);
+                for(let i =0; i<selectResult.length;i++){
+                    console.log(selectResult[i].myScheIdx);
+                    myScheIdx1.push(selectResult[i].myScheIdx);
+                }
+                
+                console.log(myScheIdx1);
 
                 //쿼리가 제대로 입력 안됐으면
                 if(!updateResult) {
@@ -211,7 +221,8 @@ router.put('/', async (req, res, next) => {
                 }
 
                 res.status(200).send({
-                    message:"Success To Cancel"
+                    message:"Success To Cancel",
+                    myScheduleActivities : myScheIdx1
                 })
             }
         }
