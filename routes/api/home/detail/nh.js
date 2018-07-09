@@ -51,12 +51,14 @@ router.get('/', async (req, res, next) => {
                 //모든 가까운 스케쥴 뽑기
                 let selectScheduleQuery =
                     `SELECT 
-                        idx, 
+                        nh.idx, 
                         state,
-                        date_format(startDate, "%Y-%m-%d") as startDate
-                    FROM schedule 
+                        date_format(startDate, "%Y-%m-%d") as startDate,
+                        (personLimit - person) AS availPerson
+                    FROM schedule, nh
                     WHERE nhIdx = ? 
-                    AND startDate > curdate();`;
+                    AND startDate > curdate()
+                    AND schedule.nhIdx = nh.idx;`;
 
                 //모든 스케쥴 결과
                 let selectScheduleResult = await db.queryParamArr(selectScheduleQuery, [nhIdx]);
@@ -245,12 +247,14 @@ router.get('/', async (req, res, next) => {
                     //모든 스케쥴 뽑기
                     let selectScheduleQuery =
                         `SELECT 
-                            idx, 
+                            nh.idx, 
                             date_format(startDate, "%Y-%m-%d") as startDate,
-                            state
-                        FROM schedule 
+                            state,
+                            (personLimit - person) AS availPerson
+                        FROM schedule, nh 
                         WHERE nhIdx = ? 
-                        AND startDate > curdate();`;
+                        AND startDate > curdate()
+                        AND schedule.nhIdx = nh.idx;`;
 
                     //스케쥴 결과
                     let selectScheduleResult = await db.queryParamArr(selectScheduleQuery, [nhIdx]);
@@ -263,7 +267,8 @@ router.get('/', async (req, res, next) => {
                         return;
                     }
 
-                    console.log(selectScheduleResult);
+                    console.log(selectScheduleResult, selectResult[0].availPerson);
+                    console.log(1);
 
                     //대원뽑기
                     let selectFriendQuery =
