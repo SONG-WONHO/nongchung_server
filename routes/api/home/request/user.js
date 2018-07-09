@@ -27,7 +27,7 @@ router.get('/', async (req, res, next) => {
         else {
             let userIdx = decoded.user_idx;
             let selectQuery = `SELECT name, img, date_format(birth, "%Y") AS birthYear,
-            date_format(birth, "%c") AS birthMonth,
+            date_format(birth, "%m") AS birthMonth,
             date_format(birth, "%d") AS birthDay, 
             sex, mail, hp FROM user WHERE idx=?;`;
             let selectResult = await db.queryParamArr(selectQuery, [userIdx]);

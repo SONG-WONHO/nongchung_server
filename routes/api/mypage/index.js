@@ -220,7 +220,7 @@ router.get('/myreview', async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let reviewQuery = `SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%c-%d") AS startDate, r.img
+            let reviewQuery = `SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%m-%d") AS startDate, r.img
             FROM NONGHWAL.review AS r, NONGHWAL.user AS u, NONGHWAL.schedule AS s ,NONGHWAL.nh AS n
             WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND n.idx = s.nhIdx AND u.idx = ? GROUP BY r.idx`;
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
