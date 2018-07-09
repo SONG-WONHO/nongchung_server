@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../../module/db');
+const db = require('../../../module/db');
 const crypto = require('crypto-promise');
-const check = require('../../module/check');
-const jwt = require('../../module/jwt');
+const check = require('../../../module/check');
+const jwt = require('../../../module/jwt');
 
 //로그인 라우터
 router.post('/', async (req, res, next) => {
