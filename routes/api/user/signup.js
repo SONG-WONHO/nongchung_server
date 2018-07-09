@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../../module/db');
-const check = require('../../module/check');
+const db = require('../../../module/db');
+const check = require('../../../module/check');
 const crypto = require('crypto-promise');
 
 //회원가입 라우터
