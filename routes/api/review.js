@@ -44,11 +44,10 @@ router.get('/', async (req, res, next) => {
             //스케쥴에 해당하는 농활 인덱스 얻기
             let nhIdx = selectResult[0].nhIdx;
             console.log(nhIdx);
-
             
             let getReviewListQuery = `SELECT u.img AS uimg, u.name, s.startDate, r.star, r.content, 
             r.img AS rimg FROM user AS u, review AS r, schedule AS s
-            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND r.scheIdx = ? 
+            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND r.scheIdx = ?
             GROUP BY r.userIdx`
 
             let getReviewListResult = await db.queryParamArr(getReviewListQuery, [scheIdx]);
