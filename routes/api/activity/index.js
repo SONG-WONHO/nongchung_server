@@ -202,21 +202,38 @@ router.get('/', async (req,res)=>{
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
             
             let reviewList = [];
+            let dicReview={};//리뷰인덱스에 해당하는 스케듈값
+            for(let j = 0; j<reviewResult.length ; j++){
+                dicReview[reviewResult[j].scheIdx]=reviewResult[j].idx;
+            }
+            console.log(dicReview);
+            console.log(Object.keys(dicReview));
+
+
             for(let r = 0; r<reviewResult.length; r++){
-                reviewList.push(reviewResult[r].scheIdx);
-                // 유저의 활동 중에서 state!
+                reviewList.push(reviewResult[r].scheIdx);//스케쥴인덱스를 넣어준다.
+                
             }
             activityResult.filter((value, pos) => {
                 if(value.state == 1){
-                    //console.log("sese"+value.idx);
-                        if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
-                            value.rState = 1;
-                            
-                        }else{//없으면
-                            value.rState = 0;
-                        }
+                    
+                    if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
+                        value.rState = 1;
+                        
+                    }else{//없으면
+                        value.rState = 0;
+                    }
                 }
             });
+            for(let c = 0; c<activityResult.length; c++){
+                if(activityResult[c].rState == 1){
+                    activityResult[c].rIdx = dicReview[activityResult[c].idx];
+
+                }
+            }
+
+
+            
             if(!activityResult || !totalResult ||!reviewResult || !timeResult || !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
