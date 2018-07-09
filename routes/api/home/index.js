@@ -3,14 +3,12 @@ const router = express.Router();
 const db = require('../../../module/db');
 const jwt = require('../../../module/jwt');
 
-const searchRouter = require('./search');
 const mapRouter = require('./map');
 const detailRouter = require('./detail/index');
 const requestRouter = require('./request/index');
 const moreRouter = require('./more/index');
 const themeRouter = require('./theme/index');
 
-router.use('/search', searchRouter);
 router.use('/detail', detailRouter);
 router.use('/request', requestRouter);
 router.use('/map', mapRouter);
