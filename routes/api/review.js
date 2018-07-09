@@ -45,26 +45,40 @@ router.get('/', async (req, res, next) => {
             let nhIdx = selectResult[0].nhIdx;
             console.log(nhIdx);
             
-            let getReviewListQuery = `SELECT u.img AS uimg, u.name, s.startDate, r.star, r.content, 
-            r.img AS rimg FROM user AS u, review AS r, schedule AS s
-            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND r.scheIdx = ?
-            GROUP BY r.userIdx`
+            let getReviewListQuery =
+                `SELECT uimg, name, date_format(startDate, "%Y-%m-%d") as startDate, star, content, rimg 
+                FROM 
+                    (SELECT 
+                        schedule.idx, startDate, star, content, img AS rimg, userIdx 
+                    FROM (select * from schedule WHERE nhIdx = ?) AS schedule 
+                    inner join review 
+                    ON schedule.idx = review.scheIdx) AS schedule
+                LEFT JOIN
+                    (SELECT idx AS userIdx,img AS uimg, name FROM user) AS user 
+                    ON schedule.userIdx = user.userIdx`;
 
-            let getReviewListResult = await db.queryParamArr(getReviewListQuery, [scheIdx]);
+            let getReviewListResult = await db.queryParamArr(getReviewListQuery, [nhIdx]);
 
+            console.log(getReviewListResult);
+
+            //쿼리수행 중 에러가 있을 때
             if(!getReviewListResult){
                 res.status(500).send({
                     message : "Internal Server Error"
                 })
-            } else if(getReviewListResult.length < 1){
+            }
+            //만약 값이 없다면
+            else if(getReviewListResult.length < 1){
                 res.status(400).send({
                     message : "No Reviews"
                 })
-            }else{
-                let rvImages = new Array();
-                let rvList = new Array();
+            }
+            //값이 있다면
+            else{
+                let rvImages = [];
+                let rvList = [];
 
-                for(i=0; i<getReviewListResult.length; i++){
+                for(let i=0; i<getReviewListResult.length; i++) {
                     rvImages[i] = getReviewListResult[i].rimg.split(',');
                     rvList[i] = {
                         "uimg" : getReviewListResult[i].uimg,
@@ -77,9 +91,8 @@ router.get('/', async (req, res, next) => {
                 }
                 
                 res.status(200).send({
-                    message : "Success to Get ReviewList",
+                    message : "Success to Get Review List",
                     rvListInfo : rvList
-                    // rvImagesArr : rvImages
                 })
             }
         }
@@ -87,70 +100,95 @@ router.get('/', async (req, res, next) => {
 });
 
 //활동한 농활 nhIdx에 속해있는 scheIdx 중에서 본인이 활동한 scheIdx에 리뷰를 추가 
-router.post('/', upload.array('rImages', 20), async (req, res) => { 
+router.post('/', upload.array('rImages', 20), async (req, res) => {
+
+    //토큰 받기
     let token = req.headers.token;
 
+    //토큰이 없다면?
     if(!token){
         res.status(400).send({
             message : "Null Value"
         })
-    } else{
+    }
+    //토큰이 있을 때
+    else{
         let decoded = jwt.verify(token);
-        if(decoded==-1){
+
+        //토큰값에 에러가 있다면?
+        if(decoded===-1){
             res.status(500).send({
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
-        }else{
+        }
+
+        //에러가 없을 때
+        else{
             let scheIdx = req.body.scheIdx;
 
             //정당한 schedule idx인지 검사
-            let checkQuery = "SELECT idx FROM schedule WHERE idx = ?"
+            let checkQuery = "SELECT idx FROM schedule WHERE idx = ?";
             
             let checkResult = await db.queryParamArr(checkQuery, [scheIdx]);
 
+            //쿼리수행 중 에러가 있을 때
             if(!checkResult){
                 res.status(500).send({
                     message : "Internal Server Error"
                 })
-            } else if(checkResult.length<1){
+            }
+            //정당하지 않은 스케쥴 인덱스일 때
+            else if(checkResult.length<1){
                 res.status(400).send({
                     message : "No schedule activity"
                 })
-            } else{
+            }
+            //정당한 스케쥴 인덱스일 때
+            else{
+
+                //리뷰를 중복해서 쓰는 건지 검사
                 let checkDuplicateReviewQuery = "SELECT userIdx, scheIdx FROM review WHERE userIdx = ? AND scheIdx = ?";
                 let checkDuplicateReview = await db.queryParamArr(checkDuplicateReviewQuery, [decoded.user_idx, scheIdx]);
 
+                //쿼리 수행중 에러가 있을 때
                 if(!checkDuplicateReview){
                     res.status(500).send({
                         message : "Internal Server Error"
                     })
-                } else if(checkDuplicateReview.length >= 1){
+                }
+                //중복해서 썼다면?
+                else if(checkDuplicateReview.length >= 1){
                     res.status(400).send({
                         message : "Already wrote Review"
                     })
-                } else{
+                }
+                //중복이 아닐 때
+                else{
                     let rImages = req.files;
                     let content = req.body.content;
                     let star = req.body.star;
 
-                    let tempArr = new Array();
+                    let tempArr = [];
 
-                    for(i=0; i<rImages.length; i++){
+                    for(let i=0; i<rImages.length; i++) {
                         tempArr[i] = rImages[i].location;
                     }
-                    joinedImages = tempArr.join(',');
+                    let joinedImages = tempArr.join(',');
 
-                    let insertReviewQuery = `INSERT INTO review (img, userIdx, content, scheIdx, star)
-                    VALUES (?, ?, ?, ?, ?)`;
+                    let insertReviewQuery =
+                        `INSERT INTO review (img, userIdx, content, scheIdx, star) 
+                        VALUES (?, ?, ?, ?, ?)`;
 
-                    let insertReview = await db.queryParamArr(insertReviewQuery, [joinedImages, decoded.user_idx, content, 
-                    scheIdx, star]);
+                    let insertReview = await db.queryParamArr(insertReviewQuery, [joinedImages, decoded.user_idx, content, scheIdx, star]);
 
+                    //쿼리수행 중 에러가 있을 때
                     if(!insertReview){
                         res.status(500).send({
                             message : "Internal Server Error"
                         })
-                    } else{
+                    }
+                    //에러가 없다면?
+                    else{
                         res.status(200).send({
                             message : "Success to Review"
                         })
@@ -159,6 +197,6 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
             }
         }
     }
-})
+});
 
 module.exports = router;
