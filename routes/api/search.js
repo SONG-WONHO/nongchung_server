@@ -188,12 +188,14 @@ router.get('/', async (req, res, next) => {
                 return;
             }
 
-            //북마크 했는 지 여부 필터링 하는 함수
-            selectResult.filter((value) => {
-                if(selectBookmarkResult[0]['nhIdx'].indexOf(value.idx) !== -1) {
-                    value.isBooked = 1
-                }
-            });
+            if (selectBookmarkResult.length >= 1) {
+                //북마크 했는 지 여부 필터링 하는 함수
+                selectResult.filter((value) => {
+                    if(selectBookmarkResult[0]['nhIdx'].indexOf(value.idx) !== -1) {
+                        value.isBooked = 1
+                    }
+                });
+            }
         }
     }
 
