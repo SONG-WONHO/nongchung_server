@@ -365,13 +365,26 @@ router.get('/', async (req, res, next) => {
                         return;
                     }
 
+                    let checkBookedQuery = `SELECT EXISTS (SELECT * FROM bookmark WHERE userIdx = ? AND nhIdx = ?) as isBooked`;
+                    let checkBookedResult = await db.queryParamArr(checkBookedQuery, [userIdx, nhIdx]);
+
+                    if (!checkBookedResult) {
+                        res.status(500).send({
+                            message : "Internal Server Error"
+                        });
+                        return;
+                    }
+
+                    console.log(checkBookedResult);
+
                     let nhInfo = {
                         "addr": selectResult[0].addr,
                         "name": selectResult[0].name,
                         "star": selectResult[0].star,
                         "description": selectResult[0].description,
                         "price":selectResult[0].price,
-                        "period":selectResult[0].period
+                        "period":selectResult[0].period,
+                        "isBooked":checkBookedResult[0].isBooked
                     };
 
                     let farmerInfo = {
