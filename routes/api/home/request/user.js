@@ -26,7 +26,10 @@ router.get('/', async (req, res, next) => {
         //올바른 토큰일 때
         else {
             let userIdx = decoded.user_idx;
-            let selectQuery = `SELECT name, img, birth, sex, mail, hp FROM user WHERE idx=?;`;
+            let selectQuery = `SELECT name, img, date_format(birth, "%Y") AS birthYear,
+            date_format(birth, "%c") AS birthMonth,
+            date_format(birth, "%d") AS birthDay, 
+            sex, mail, hp FROM user WHERE idx=?;`;
             let selectResult = await db.queryParamArr(selectQuery, [userIdx]);
 
             if(!selectResult) {
