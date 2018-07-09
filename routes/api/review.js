@@ -6,9 +6,11 @@ const check = require('../../module/check');
 const jwt = require('../../module/jwt');
 const upload = require('../../config/s3multer').uploadReviewImage;
 
+//리뷰보기
 //해당 농활의 후기 목록을 불러옴
 router.get('/', async (req, res, next) => {
-    //어떤 농활인 지 받기
+
+    //어떤 스케쥴인지 받기
     let scheIdx = req.query.scheIdx;
 
     //비어있는 값인지 검증
@@ -16,11 +18,15 @@ router.get('/', async (req, res, next) => {
         res.status(400).send({
             message: "Null Value"
         })
-    } else {
+    }
+    //안비어있을 때
+    else {
 
         //정당한 스케줄인 지 검증하기
-        let selectQuery = "SELECT * FROM schedule WHERE idx = ?";
+        let selectQuery = "SELECT nhIdx FROM schedule WHERE idx = ?";
         let selectResult = await db.queryParamArr(selectQuery, [scheIdx]);
+
+        console.log(selectResult);
 
         if (!selectResult) {
             res.status(500).send({
@@ -35,6 +41,11 @@ router.get('/', async (req, res, next) => {
 
         //정당한 스케줄이라면?
         } else {
+            //스케쥴에 해당하는 농활 인덱스 얻기
+            let nhIdx = selectResult[0].nhIdx;
+            console.log(nhIdx);
+
+            
             let getReviewListQuery = `SELECT u.img AS uimg, u.name, s.startDate, r.star, r.content, 
             r.img AS rimg FROM user AS u, review AS r, schedule AS s
             WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND r.scheIdx = ? 
