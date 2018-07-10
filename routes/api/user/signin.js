@@ -37,11 +37,20 @@ router.post('/', async (req, res, next) => {
             if (hashedpw.toString('base64') === checkResult[0].pw){ //같다면?
 
                 let token = jwt.sign(checkResult[0].idx);
-                let InfoshowQuery = `SELECT user.mail, user.name,user.birth,user.sex,user.hp, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
-            FROM NONGHWAL.user WHERE user.idx = (SELECT user.idx FROM NONGHWAL.user WHERE user.mail = ?)`;
+                let InfoshowQuery = `SELECT user.mail, user.name,
+                date_format(user.birth,"%Y-%m-%d") AS birth,
+                user.sex,user.hp, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
+                FROM NONGHWAL.user WHERE user.idx = (SELECT user.idx FROM NONGHWAL.user WHERE user.mail = ?)`;
                 let InfoshowResult = await db.queryParamArr(InfoshowQuery,[userMail]);
-
+                console.log(InfoshowResult);
+                for(let i = 0; i< InfoshowResult.length; i++){
+                    var a = InfoshowResult[i].birth;
+                    var aaa= a.split("-");
+                    console.log(aaa);
+                    var date = aaa[0]+"년 "+aaa[1]+"월 "+aaa[2]+"일";
+                    InfoshowResult[i].birth =date;
                 
+                }
                 res.status(200).send({
                     message : "Success To Sign In",
                     token : token,
