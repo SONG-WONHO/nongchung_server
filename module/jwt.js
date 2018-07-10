@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 //secret key import
-const secretKey = require('../config/secretKey.js').secret;
+const secretKey = require('../config/secretKey.js').jwtSecret;
 
 module.exports = {
 
