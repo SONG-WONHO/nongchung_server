@@ -40,11 +40,16 @@ router.get('/complete',async (req,res)=>{
                 dicSchePerson[timeResult[a].idx] = timeResult[a].person;
             }//키값: 농활스케듈 인덱스, 벨류값: 농활스케쥴에 참여한 인원
 
-            //취소 2 , 완료 1, 신청중 0
+            //0 : 입금 대기(신청중) | 1: 입금 완료 (신청중)
+            //2 : 
+
+
             let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
             ON a.scheIdx = s.idx 
             SET a.state = ?
             WHERE s.deadline > CURDATE()`; //데드라인이 안넘는 것
+
+            //조건 추가 
             let stateResult = await db.queryParamArr(stateQuery,[0]);
             for(let a= 0 ;a<timeResult.length; a++){
                 if(dicSchePerson[timeResult[a].idx]>dicMinPerson[timeResult[a].idx]){
@@ -277,6 +282,16 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
             console.log(tempImg);
             console.log(joinedImages);
 
+            let showingQuery = `SELECT content, star, img FROM NONGHWAL.review WHERE idx = ?`;
+            let showingResult = await db.queryParamArr(showingQuery,[rIdx]);
+            for(let a = 0;a<showingResult.length; a++){
+                var b = showingResult[a].img;
+                let imgList = [];
+                var aaa= b.split(",");
+                
+                showingResult[a].img = aaa;
+            }
+
             let reviewChangeQuery  = `UPDATE NONGHWAL.review SET review.content =?, review.img =?, review.star=? WHERE review.idx = ?`;
             let reviewChangeResult = await db.queryParamArr(reviewChangeQuery,[content,joinedImages,star,rIdx]);
             if(!reviewChangeResult){
@@ -285,7 +300,8 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
                 });
             }else{
                 res.status(200).send({
-                    message:"success To update review"
+                    message:"success To update review",
+                    data : showingResult[0]
                 });
 
             }
