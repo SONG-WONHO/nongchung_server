@@ -49,14 +49,14 @@ router.post('/', async (req, res, next) => {
                 });
             } else { //다르다면?
 
-                res.status(200).send({
+                res.status(401).send({
                     message : "Fail To Sign In"
                 });
                 console.log("password error");
             }
         } else { // 유저가 없을 때
 
-            res.status(200).send({
+            res.status(401).send({
                 message : "Fail To Sign In"
             });
             console.log("id error");
