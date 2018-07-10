@@ -174,13 +174,20 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                         tempArr[i] = rImages[i].location;
                     }
                     let joinedImages = tempArr.join(',');
+                    
+                    let showingQuery = `SELECT nh.period, date_format(schedule.startDate,"%Y.%m.%d") AS startDate
+                    , date_format(schedule.endDate,"%Y.%m.%d") AS endDate
+                    FROM NONGHWAL.review, NONGHWAL.schedule, NONGHWAL.nh
+                    WHERE review.scheIdx = schedule.idx AND nh.idx = schedule.nhIdx
+                    AND review.scheIdx = ?`;
 
                     let insertReviewQuery =
                         `INSERT INTO review (img, userIdx, content, scheIdx, star) 
                         VALUES (?, ?, ?, ?, ?)`;
 
                     let insertReview = await db.queryParamArr(insertReviewQuery, [joinedImages, decoded.user_idx, content, scheIdx, star]);
-
+                    let showingResult = await db.queryParamArr(showingQuery, [scheIdx]);
+                    
                     //쿼리수행 중 에러가 있을 때
                     if(!insertReview){
                         res.status(500).send({
@@ -190,7 +197,9 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                     //에러가 없다면?
                     else{
                         res.status(200).send({
-                            message : "Success to Review"
+                            message : "Success to Review",
+                            data : showingResult
+                            
                         })
                     }
                 }

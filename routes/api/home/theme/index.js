@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require('../../../../module/db');
 const jwt = require('../../../../module/jwt');
 
-router.get('/:idx',async (req,res)=>{
-    var tIdx = req.params.idx;
+router.get('/:themeIdx',async (req,res)=>{
+    var tIdx = req.params.themeIdx;
     if(!tIdx){
         res.status(400).send({
             message: "Null Value"

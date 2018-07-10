@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require('../../../module/db');
 const jwt = require('../../../module/jwt');
 const moment = require('moment');
+const upload = require('../../../config/s3multer').uploadReviewImage;
+
 
 
 
@@ -185,7 +187,8 @@ router.get('/', async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
+            let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,
+            date_format(s.endDate, "%Y-%c-%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
             abs(n.personLimit - s.person) as currentPerson,
             s.person, n.personLimit, s.idx, i.img
@@ -246,6 +249,49 @@ router.get('/', async (req,res)=>{
                 });
             }
         }   
+    }
+});
+router.put('/review', upload.array('rImages', 20), async (req, res)=>{
+    var token = req.headers.token;
+    var rIdx = req.body.rIdx;
+    var content = req.body.content;
+    var rImage = req.files;
+    var star = req.body.star;
+    console.log(rImage);
+    if(!token||!rIdx||!content){
+        res.status(400).send({
+            message:"Null value"
+        });
+    }else{
+        var decoded = jwt.verify(token);
+        if(decoded==-1){
+            res.status(500).send({
+                message:"token error"
+            });
+        }else{
+            let tempImg = [];
+            for(let a = 0; a<rImage.length; a++){
+                tempImg.push(rImage[a].location);
+            }
+            let joinedImages = tempImg.join(',');
+            console.log(tempImg);
+            console.log(joinedImages);
+
+            let reviewChangeQuery  = `UPDATE NONGHWAL.review SET review.content =?, review.img =?, review.star=? WHERE review.idx = ?`;
+            let reviewChangeResult = await db.queryParamArr(reviewChangeQuery,[content,joinedImages,star,rIdx]);
+            if(!reviewChangeResult){
+                res.status(500).send({
+                    message:"Internal server error"
+                });
+            }else{
+                res.status(200).send({
+                    message:"success To update review"
+                });
+
+            }
+
+        }
+
     }
 });
 
