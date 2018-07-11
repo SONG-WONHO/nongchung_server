@@ -216,17 +216,37 @@ router.get('/', async (req, res, next) => {
     //지역을 입력 했다면?
     if(areaList) {
 
-        areaList[0] = areaList[0][1];
-        areaList[areaList.length -1] = areaList[areaList.length -1][0];
+        areaList = Array.from(areaList);
 
-        //지역필터 추가
-        selectResult = selectResult.filter((value) => {
-            console.log(value.addrIdx);
-            console.log(areaList.indexOf(value.addrIdx));
-            if (areaList.indexOf(value.addrIdx) !== -1) {
-                return true;
-            }
+        areaList.splice(0, 1);
+        console.log(areaList);
+
+        areaList.pop();
+
+        console.log(areaList);
+
+        let areaString = areaList.join("");
+        let realAreaList = [];
+        areaList = areaString.split(',').filter(value => {
+            realAreaList.push(parseInt(value));
         });
+        console.log(realAreaList[0]);
+
+        console.log(selectResult);
+
+        if (realAreaList.indexOf(17) !== -1) {
+            console.log(1);
+        }
+
+        else {
+            //지역필터 추가
+            selectResult = selectResult.filter((value) => {
+                console.log(2);
+                if (realAreaList.indexOf(value.addrIdx) !== -1) {
+                    return true;
+                }
+            });
+        }
 
         res.status(200).send({
             message: "Success To Get Search",
