@@ -107,6 +107,7 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
 
     //토큰이 없다면?
     if(!token){
+        console.log("no token");
         res.status(400).send({
             message : "Null Value"
         })
@@ -139,7 +140,9 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
             }
             //정당하지 않은 스케쥴 인덱스일 때
             else if(checkResult.length<1){
+                console.log("no schedule");
                 res.status(400).send({
+
                     message : "No schedule activity"
                 })
             }
@@ -158,6 +161,7 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                 }
                 //중복해서 썼다면?
                 else if(checkDuplicateReview.length >= 1){
+                    console.log("already");
                     res.status(400).send({
                         message : "Already wrote Review"
                     })
