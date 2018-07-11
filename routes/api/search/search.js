@@ -216,8 +216,14 @@ router.get('/', async (req, res, next) => {
     //지역을 입력 했다면?
     if(areaList) {
 
+        areaList = Array.from(areaList);
+
+        console.log(areaList);
+
         areaList[0] = areaList[0][1];
         areaList[areaList.length -1] = areaList[areaList.length -1][0];
+
+        console.log(areaList);
 
         //지역필터 추가
         selectResult = selectResult.filter((value) => {
