@@ -168,6 +168,8 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                     let content = req.body.content;
                     let star = req.body.star;
 
+                    console.log(rImages, content, star);
+
                     let tempArr = [];
 
                     for(let i=0; i<rImages.length; i++) {
