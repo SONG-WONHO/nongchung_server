@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
     }
     //안비어있을 때
     else {
-        console.log("드러와써여");
+        
 
         //정당한 스케줄인 지 검증하기
         let selectQuery = "SELECT nhIdx FROM schedule WHERE idx = ?";
@@ -41,14 +41,14 @@ router.get('/', async (req, res, next) => {
             res.status(400).send({
                 message: "No schedule activity"
             })
-            console.log("스케쥴 없어");
+            
 
         //정당한 스케줄이라면?
         } else {
             //스케쥴에 해당하는 농활 인덱스 얻기
             let nhIdx = selectResult[0].nhIdx;
             console.log(nhIdx);
-            console.log("정당한 농활 스케쥴");
+            
             
             let getReviewListQuery =
                 `SELECT uimg, name, date_format(startDate, "%Y-%m-%d") as startDate, star, content, rimg 
@@ -64,25 +64,27 @@ router.get('/', async (req, res, next) => {
 
             let getReviewListResult = await db.queryParamArr(getReviewListQuery, [nhIdx]);
 
-            console.log(getReviewListResult);
+            console.log("들어왔나???==>"+getReviewListResult);
 
             //쿼리수행 중 에러가 있을 때
             if(!getReviewListResult){
                 res.status(500).send({
                     message : "Internal Server Error"
                 })
+                console.log("쿼리에러");
             }
             //만약 값이 없다면
             else if(getReviewListResult.length < 1){
                 res.status(400).send({
                     message : "No Reviews"
                 })
+                console.log("값이 없어");
             }
             //값이 있다면
             else{
                 let rvImages = [];
                 let rvList = [];
-
+                console.log("값있지");
                 for(let i=0; i<getReviewListResult.length; i++) {
                     rvImages[i] = getReviewListResult[i].rimg.split(',');
                     rvList[i] = {
@@ -94,6 +96,7 @@ router.get('/', async (req, res, next) => {
                         "rvImages" : rvImages[i]
                     }
                 }
+                console.log(rvList);
                 
                 res.status(200).send({
                     message : "Success to Get Review List",
