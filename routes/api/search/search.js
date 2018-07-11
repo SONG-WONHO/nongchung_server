@@ -214,7 +214,7 @@ router.get('/', async (req, res, next) => {
     });
 
     //지역을 입력 했다면?
-    if(areaList) {
+    if(areaList && areaList !== []) {
 
         areaList = Array.from(areaList);
 
