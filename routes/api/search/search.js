@@ -213,8 +213,10 @@ router.get('/', async (req, res, next) => {
         }
     });
 
+    console.log(areaList);
+
     //지역을 입력 했다면?
-    if(areaList) {
+    if(areaList && areaList !== "[]") {
 
         areaList = Array.from(areaList);
 
@@ -232,7 +234,9 @@ router.get('/', async (req, res, next) => {
         });
         console.log(realAreaList[0]);
 
-        console.log(selectResult);
+        // console.log(selectResult);
+
+        console.log(areaList);
 
         if (realAreaList.indexOf(17) !== -1) {
             console.log(1);
