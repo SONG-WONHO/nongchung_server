@@ -149,6 +149,7 @@ router.get('/', async (req, res, next) => {
                 }
 
                 let nhInfo = {
+                    "nhIdx" : nhIdx,
                     "addr": selectResult[0].addr,
                     "name": selectResult[0].name,
                     "star": selectResult[0].star,
@@ -383,6 +384,7 @@ router.get('/', async (req, res, next) => {
                     console.log(checkBookedResult);
 
                     let nhInfo = {
+                        "nhIdx": nhIdx,
                         "addr": selectResult[0].addr,
                         "name": selectResult[0].name,
                         "star": selectResult[0].star,
