@@ -41,7 +41,9 @@ router.get('/complete',async (req,res)=>{
             }//키값: 농활스케듈 인덱스, 벨류값: 농활스케쥴에 참여한 인원
 
             //0 : 입금 대기(신청중) | 1: 입금 완료 (신청중)
-            //2 : 
+            //2 : 완료 | 3 : 취소
+
+
 
 
             let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
@@ -92,9 +94,11 @@ router.get('/complete',async (req,res)=>{
             FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
             AND a.userIdx = u.idx AND u.idx = ? AND a.state = ? GROUP BY s.idx`;
+            
             let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`
+
             let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,1]);
             let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx,1]);
             
@@ -282,15 +286,7 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
             console.log(tempImg);
             console.log(joinedImages);
 
-            let showingQuery = `SELECT content, star, img FROM NONGHWAL.review WHERE idx = ?`;
-            let showingResult = await db.queryParamArr(showingQuery,[rIdx]);
-            for(let a = 0;a<showingResult.length; a++){
-                var b = showingResult[a].img;
-                let imgList = [];
-                var aaa= b.split(",");
-                
-                showingResult[a].img = aaa;
-            }
+           
 
             let reviewChangeQuery  = `UPDATE NONGHWAL.review SET review.content =?, review.img =?, review.star=? WHERE review.idx = ?`;
             let reviewChangeResult = await db.queryParamArr(reviewChangeQuery,[content,joinedImages,star,rIdx]);
@@ -300,8 +296,7 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
                 });
             }else{
                 res.status(200).send({
-                    message:"success To update review",
-                    data : showingResult[0]
+                    message:"success To update review"
                 });
 
             }
@@ -309,6 +304,54 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
         }
 
     }
+});
+router.get('/review/:rIdx',async(req,res)=>{
+    var rIdx = req.params.rIdx;
+    var token = req.headers.token;
+    console.log(rIdx);
+    if(!token || !rIdx){
+        res.status(400).send({
+            message:"Null Value"
+        });
+    }else{
+        // 정당한 리뷰일 때 수정해야 함
+        
+
+        var decoded = jwt.verify(token);
+        let imgList = [];
+        
+        if(decoded == -1){
+            res.status(500).send({
+                message:"token error"
+            });
+        }else{
+            
+            let showingQuery = `SELECT content, star, img FROM NONGHWAL.review WHERE review.idx = ?`;
+            let showingResult = await db.queryParamArr(showingQuery,[rIdx]);
+            
+            for(let a = 0;a<showingResult.length; a++){
+                var b = showingResult[a].img;
+                var aaa= b.split(",");
+                console.log('aasas');
+                showingResult[a].img = aaa;
+            }
+            
+            if(!showingResult){
+                res.status(500).send({
+                    message:"Internal server error"
+                });
+
+            }else{
+                res.status(200).send({
+                    message:"Sucess To show review INFO",
+                    data : showingResult[0]
+                });
+            }
+        }
+        
+    }
+
+
 });
 
 module.exports = router;
