@@ -10,99 +10,86 @@ const upload = require('../../config/s3multer').uploadReviewImage;
 //해당 농활의 후기 목록을 불러옴
 router.get('/', async (req, res, next) => {
 
-    //어떤 스케쥴인지 받기
-    let scheIdx = req.query.scheIdx;
-    console.log("scheIdx? ==> "+scheIdx);
+    let nhIdx = req.query.nhIdx;
 
-    //비어있는 값인지 검증
-    if(check.checkNull([scheIdx])) {
-        res.status(400).send({
-            message: "Null Value"
+    //정당한 스케줄인 지 검증하기
+    let selectQuery = "SELECT nhIdx FROM schedule WHERE nhIdx = ? GROUP BY nhIdx";
+    let selectResult = await db.queryParamArr(selectQuery, [nhIdx]);
+
+    console.log(selectResult);
+
+    if (!selectResult) {
+        res.status(500).send({
+            message : "Internal Server Error"
         })
-    }
-    //안비어있을 때
-    else {
+        console.log("쿼리 실패");
+
+    //정당한 스케줄이 아닐때
+    } else if (selectResult.length < 1) {
+        res.status(400).send({
+            message: "No Nohwal activity"
+        })
         
 
-        //정당한 스케줄인 지 검증하기
-        let selectQuery = "SELECT nhIdx FROM schedule WHERE idx = ?";
-        let selectResult = await db.queryParamArr(selectQuery, [scheIdx]);
+    //정당한 스케줄이라면?
+    } else {
+        //스케쥴에 해당하는 농활 인덱스 얻기
+        let nhIdx = selectResult[0].nhIdx;
+        console.log(nhIdx);
+        
+        
+        let getReviewListQuery =
+            `SELECT uimg, name, date_format(startDate, "%Y-%m-%d") as startDate, star, content, rimg 
+            FROM 
+                (SELECT 
+                    schedule.idx, startDate, star, content, img AS rimg, userIdx 
+                FROM (select * from schedule WHERE nhIdx = ?) AS schedule 
+                inner join review 
+                ON schedule.idx = review.scheIdx) AS schedule
+            LEFT JOIN
+                (SELECT idx AS userIdx,img AS uimg, name FROM user) AS user 
+                ON schedule.userIdx = user.userIdx`;
 
-        console.log(selectResult);
+        let getReviewListResult = await db.queryParamArr(getReviewListQuery, [nhIdx]);
 
-        if (!selectResult) {
+        console.log("들어왔나???==>"+getReviewListResult);
+
+        //쿼리수행 중 에러가 있을 때
+        if(!getReviewListResult){
             res.status(500).send({
                 message : "Internal Server Error"
             })
-            console.log("쿼리 실패");
-
-        //정당한 스케줄이 아닐때
-        } else if (selectResult.length < 1) {
+            console.log("쿼리에러");
+        }
+        //만약 값이 없다면
+        else if(getReviewListResult.length < 1){
             res.status(400).send({
-                message: "No schedule activity"
+                message : "No Reviews"
             })
-            
-
-        //정당한 스케줄이라면?
-        } else {
-            //스케쥴에 해당하는 농활 인덱스 얻기
-            let nhIdx = selectResult[0].nhIdx;
-            console.log(nhIdx);
-            
-            
-            let getReviewListQuery =
-                `SELECT uimg, name, date_format(startDate, "%Y-%m-%d") as startDate, star, content, rimg 
-                FROM 
-                    (SELECT 
-                        schedule.idx, startDate, star, content, img AS rimg, userIdx 
-                    FROM (select * from schedule WHERE nhIdx = ?) AS schedule 
-                    inner join review 
-                    ON schedule.idx = review.scheIdx) AS schedule
-                LEFT JOIN
-                    (SELECT idx AS userIdx,img AS uimg, name FROM user) AS user 
-                    ON schedule.userIdx = user.userIdx`;
-
-            let getReviewListResult = await db.queryParamArr(getReviewListQuery, [nhIdx]);
-
-            console.log("들어왔나???==>"+getReviewListResult);
-
-            //쿼리수행 중 에러가 있을 때
-            if(!getReviewListResult){
-                res.status(500).send({
-                    message : "Internal Server Error"
-                })
-                console.log("쿼리에러");
-            }
-            //만약 값이 없다면
-            else if(getReviewListResult.length < 1){
-                res.status(400).send({
-                    message : "No Reviews"
-                })
-                console.log("값이 없어");
-            }
-            //값이 있다면
-            else{
-                let rvImages = [];
-                let rvList = [];
-                console.log("값있지");
-                for(let i=0; i<getReviewListResult.length; i++) {
-                    rvImages[i] = getReviewListResult[i].rimg.split(',');
-                    rvList[i] = {
-                        "uimg" : getReviewListResult[i].uimg,
-                        "name" : getReviewListResult[i].name,
-                        "startDate" : getReviewListResult[i].startDate,
-                        "star" : getReviewListResult[i].star,
-                        "content" : getReviewListResult[i].content,
-                        "rvImages" : rvImages[i]
-                    }
+            console.log("값이 없어");
+        }
+        //값이 있다면
+        else{
+            let rvImages = [];
+            let rvList = [];
+            console.log("값있지");
+            for(let i=0; i<getReviewListResult.length; i++) {
+                rvImages[i] = getReviewListResult[i].rimg.split(',');
+                rvList[i] = {
+                    "uimg" : getReviewListResult[i].uimg,
+                    "name" : getReviewListResult[i].name,
+                    "startDate" : getReviewListResult[i].startDate,
+                    "star" : getReviewListResult[i].star,
+                    "content" : getReviewListResult[i].content,
+                    "rvImages" : rvImages[i]
                 }
-                console.log(rvList);
-                
-                res.status(200).send({
-                    message : "Success to Get Review List",
-                    rvListInfo : rvList
-                })
             }
+            console.log(rvList);
+            
+            res.status(200).send({
+                message : "Success to Get Review List",
+                rvListInfo : rvList
+            })
         }
     }
 });
