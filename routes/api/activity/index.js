@@ -87,7 +87,7 @@ router.get('/complete',async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,date_format(s.endDate, "%Y-%c-%d") AS endDate , 
+            let activityQuery = `SELECT date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
             abs(n.personLimit - s.person) as currentPerson,
             s.person, n.personLimit, s.idx,i.img
@@ -196,8 +196,8 @@ router.get('/', async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT date_format(s.startDate, "%Y-%c-%d") AS startDate,
-            date_format(s.endDate, "%Y-%c-%d") AS endDate , 
+            let activityQuery = `SELECT date_format(s.startDate, "%Y.%c.%d") AS startDate,
+            date_format(s.endDate, "%Y.%c.%d") AS endDate , 
             f.addr, n.period, n.name, a.state, n.price,
             abs(n.personLimit - s.person) as currentPerson,
             s.person, n.personLimit, s.idx, i.img
@@ -305,35 +305,38 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
 
     }
 });
-router.get('/review/:rIdx',async(req,res)=>{
-    var rIdx = req.params.rIdx;
+router.get('/review/:scheIdx',async(req,res)=>{
+    var scheIdx = req.params.scheIdx;
     var token = req.headers.token;
-    console.log(rIdx);
-    if(!token || !rIdx){
+    if(!token || !scheIdx){
         res.status(400).send({
             message:"Null Value"
         });
     }else{
         // 정당한 리뷰일 때 수정해야 함
         
-
         var decoded = jwt.verify(token);
-        let imgList = [];
-        
         if(decoded == -1){
             res.status(500).send({
                 message:"token error"
             });
         }else{
             
-            let showingQuery = `SELECT content, star, img FROM NONGHWAL.review WHERE review.idx = ?`;
-            let showingResult = await db.queryParamArr(showingQuery,[rIdx]);
+            let showingQuery = `SELECT content, star, img, idx AS rIdx FROM NONGHWAL.review WHERE review.userIdx = ? AND review.scheIdx = ?`;
+            let showingResult = await db.queryParamArr(showingQuery,[decoded.user_idx, scheIdx]);
             
             for(let a = 0;a<showingResult.length; a++){
                 var b = showingResult[a].img;
                 var aaa= b.split(",");
                 console.log('aasas');
                 showingResult[a].img = aaa;
+            }
+            console.log(showingResult);
+            if(showingResult == [])
+            {
+                res.status(400).send({
+                    message : "No reviews"
+                });
             }
             
             if(!showingResult){
