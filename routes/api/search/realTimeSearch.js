@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const check = require('../../module/check');
-const db = require('../../module/db');
-const jwt = require('../../module/jwt');
+const db = require('../../../module/db');
 
 router.get('/', async (req, res, next) => {
 
