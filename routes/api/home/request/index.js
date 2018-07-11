@@ -199,7 +199,14 @@ router.put('/', async (req, res, next) => {
                     return;
                 }
 
-                let updateQuery = `UPDATE schedule SET person = person - 1 WHERE idx = ?`;
+                let updateQuery = `UPDATE schedule SET person = 
+                (CASE WHEN ((person - 1)<0)
+                THEN 0 
+                ELSE
+                (person - 1)
+                END
+                )
+                WHERE idx = ?`;
                 let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
                 let selectQuery = `SELECT a.scheIdx AS myScheIdx FROM NONGHWAL.activity AS a, NONGHWAL.user AS u WHERE a.userIdx = u.idx AND u.idx = ?`;
                 let selectResult = await db.queryParamArr(selectQuery,[decoded.user_idx]);
