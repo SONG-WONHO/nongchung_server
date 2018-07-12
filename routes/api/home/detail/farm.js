@@ -29,10 +29,12 @@ router.get('/:nhIdx', async (req, res) => {
             FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
             WHERE farm.farmerIdx = farmer.idx AND nh.farmIdx = farm.idx AND nh.idx = ? `;//농부프로필~~!
             let farmResult = await db.queryParamArr(farmQuery,[nhIdx]);
-            var farmIdx = farmResult[0]["farmerIdx"]
+            var farmerIdx = farmResult[0]["farmerIdx"]
 
 
-            let nhInfoQuery1 = `SELECT farm.name AS farmName, farm.addr AS farmAddr, nh.period, nh.price, farm.idx AS farmIdx,
+            let nhInfoQuery1 = `SELECT nh.name AS nhName, farm.addr AS farmAddr, nh.period, nh.price, 
+            nh.idx AS nhIdx,
+            farm.idx AS farmIdx,
             CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > nh.wtime THEN 0
             ELSE 1
             END AS 'newState'
@@ -42,16 +44,34 @@ router.get('/:nhIdx', async (req, res) => {
 											FROM NONGHWAL.farm, NONGHWAL.nh,NONGHWAL.farmer 
 											WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND nh.idx = ?)
                                             `;
+            
             let imgQuery = `SELECT SUBSTRING_INDEX(GROUP_CONCAT(farm_img.img SEPARATOR '|'),"|",1) AS farmImg, farm.idx AS farmIdx FROM NONGHWAL.farm, NONGHWAL.farm_img
             WHERE farm.idx = farm_img.farmIdx AND farm.farmerIdx = ?
             group by farm.idx `;
+            
+            
+
             let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx]);
-            let imgResult = await db.queryParamArr(imgQuery,[farmIdx]);
+            let imgResult = await db.queryParamArr(imgQuery,[farmerIdx]);
+            console.log(nhInfoResult[1]["farmIdx"]);
+            console.log(imgResult);
+
+
+            
             for(let a = 0; a <nhInfoResult.length; a++){
                 if(nhInfoResult[a]["farmIdx"] == imgResult[a]["farmIdx"]){
                     nhInfoResult[a].farmImg = imgResult[a]["farmImg"];
                 }
+                console.log(nhInfoResult[a]["nhIdx"]);
+                let checkBookedQuery = `SELECT EXISTS (SELECT * FROM bookmark WHERE userIdx = ? AND nhIdx = ?) as isBooked`;
+                let checkBookedResult = await db.queryParamArr(checkBookedQuery, [decoded.user_idx, nhInfoResult[a]["nhIdx"]]);
+                console.log(checkBookedResult);
+                nhInfoResult[a].isBooked = checkBookedResult[0]["isBooked"];
+                
+
+                
             }
+
             console.log(nhInfoResult);
             if(!nhInfoResult || !imgResult || !farmResult ){
                 res.status(500).send({
