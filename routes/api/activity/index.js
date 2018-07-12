@@ -277,27 +277,32 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
             res.status(500).send({
                 message:"token error"
             });
+            console.log("토큰에러찡");
         }else{
             let tempImg = [];
             for(let a = 0; a<rImage.length; a++){
                 tempImg.push(rImage[a].location);
             }
             let joinedImages = tempImg.join(',');
-            console.log(tempImg);
-            console.log(joinedImages);
-
-           
+            //console.log(tempImg);
+            //console.log(joinedImages);
+            
 
             let reviewChangeQuery  = `UPDATE NONGHWAL.review SET review.content =?, review.img =?, review.star=? WHERE review.idx = ?`;
             let reviewChangeResult = await db.queryParamArr(reviewChangeQuery,[content,joinedImages,star,rIdx]);
+            console.log("바뀌었나??"+reviewChangeResult);
             if(!reviewChangeResult){
                 res.status(500).send({
                     message:"Internal server error"
+
                 });
+                console.log("업뎃xX");
             }else{
                 res.status(200).send({
                     message:"success To update review"
                 });
+                console.log("업뎃 됐음...");
+            
 
             }
 
