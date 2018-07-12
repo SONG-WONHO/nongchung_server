@@ -266,7 +266,7 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
     var content = req.body.content;
     var rImage = req.files;
     var star = req.body.star;
-    console.log(rImage);
+    console.log(req.body);
     if(!token||!rIdx||!content){
         res.status(400).send({
             message:"Null value"
