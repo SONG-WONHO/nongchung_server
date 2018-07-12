@@ -10,7 +10,7 @@ router.get('/:themeIdx',async (req,res)=>{
             message: "Null Value"
         });
     }else{
-        let showThemeQuery =`SELECT h.img AS farmerImg, f.addr, n.name, n.price, n.period,
+        let showThemeQuery =`SELECT h.img AS farmerImg, f.addr, n.name, n.price, n.period, n.idx AS nhIdx,
         substring_index(group_concat(i.img separator ','), ',', 1) AS fImg,
         CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > n.wtime THEN 0
         ELSE 1
