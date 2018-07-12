@@ -33,13 +33,13 @@ router.get('/:nhIdx', async (req, res) => {
             CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > nh.wtime THEN 0
             ELSE 1
             END AS 'newState',
-            SELECT img
+            (SELECT img
 FROM (SELECT nh.idx, nh.farmIdx FROM nh) AS nh
 LEFT JOIN
 (SELECT farm.idx AS farmIdx, farm_img.img
 FROM farm
 LEFT JOIN(select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm ON nh.farmIdx = farm.farmIdx
-WHERE nh.idx = ?
+WHERE nh.idx = ?) AS img
 
 			FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
             WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND 
@@ -54,20 +54,20 @@ WHERE nh.idx = ?
             
             
 
-            let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx.nhIdx]);
+            let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx,nhIdx]);
             let imgResult = await db.queryParamArr(imgQuery,[farmerIdx]);
             // console.log(nhInfoResult[0]["farmIdx"]);
             console.log(imgResult);
 
 
-            
+            /*
             for(let a = 0; a <nhInfoResult.length; a++){
                 if(nhInfoResult[a]["farmIdx"] == imgResult[a]["farmIdx"]){
                     nhInfoResult[a].farmImg = imgResult[a]["farmImg"];
                     }
                 
             }
-
+*/
             console.log(nhInfoResult);
             if(!nhInfoResult || !imgResult || !farmResult ){
                 res.status(500).send({
@@ -116,6 +116,7 @@ WHERE nh.idx = ?
                     FROM farm
                     LEFT JOIN(select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm ON nh.farmIdx = farm.farmIdx
                     WHERE nh.idx = ?) AS img
+
 	    		FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
                 WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND 
 			    				farmer.idx = (SELECT farmer.idx 
@@ -137,10 +138,8 @@ WHERE nh.idx = ?
             
 
             
-            /*    for(let a = 0; a <nhInfoResult.length; a++){
-                    if(nhInfoResult[a]["farmIdx"] == imgResult[a]["farmIdx"]){
-                        nhInfoResult[a].farmImg = imgResult[a]["farmImg"];
-                    }
+                for(let a = 0; a <nhInfoResult.length; a++){
+
                     let checkBookedQuery = `SELECT EXISTS (SELECT * FROM bookmark WHERE userIdx = ? AND nhIdx = ?) as isBooked`;
                     let checkBookedResult = await db.queryParamArr(checkBookedQuery, [decoded.user_idx, nhInfoResult[a]["nhIdx"]]);
                     console.log(checkBookedResult);
@@ -150,7 +149,7 @@ WHERE nh.idx = ?
                             message:"Internal server Error!"
                         });
                     }   
-                }*/
+                }
 
                 console.log(nhInfoResult);
                 if(!nhInfoResult || !imgResult || !farmResult ){
