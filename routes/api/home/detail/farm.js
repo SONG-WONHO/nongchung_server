@@ -38,6 +38,7 @@ router.get('/:nhIdx', async (req, res) => {
             CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > nh.wtime THEN 0
             ELSE 1
             END AS 'newState'
+
 			FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
             WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND 
 							farmer.idx = (SELECT farmer.idx 
@@ -53,7 +54,7 @@ router.get('/:nhIdx', async (req, res) => {
 
             let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx]);
             let imgResult = await db.queryParamArr(imgQuery,[farmerIdx]);
-            console.log(nhInfoResult[1]["farmIdx"]);
+           // console.log(nhInfoResult[0]["farmIdx"]);
             console.log(imgResult);
 
 
@@ -62,7 +63,6 @@ router.get('/:nhIdx', async (req, res) => {
                 if(nhInfoResult[a]["farmIdx"] == imgResult[a]["farmIdx"]){
                     nhInfoResult[a].farmImg = imgResult[a]["farmImg"];
                 }
-                console.log(nhInfoResult[a]["nhIdx"]);
                 let checkBookedQuery = `SELECT EXISTS (SELECT * FROM bookmark WHERE userIdx = ? AND nhIdx = ?) as isBooked`;
                 let checkBookedResult = await db.queryParamArr(checkBookedQuery, [decoded.user_idx, nhInfoResult[a]["nhIdx"]]);
                 console.log(checkBookedResult);
