@@ -20,14 +20,19 @@ router.get('/', async (req, res) => {
             });
         }else{
             //해당 사용자가 선택한 찜목록의 리스트를 보여주기 위한 쿼리
-            let getBookmarkListQuery = `SELECT nh.idx, nh.price, nh.star, nh.period, nh.name, 
-            (select count(*) from bookmark where bookmark.userIdx = ? and  bookmark.nhIdx = nh.idx) 
-            as isBooked, farm.addr, SUBSTRING_INDEX(GROUP_CONCAT(farm_img.img SEPARATOR ','), ',', 1) 
-            as img FROM bookmark, nh, farm, farm_img WHERE nh.idx = bookmark.nhIdx AND 
-            farm.idx = farm_img.farmIdx AND bookmark.userIdx = ? GROUP BY nhIdx`
+            let getBookmarkListQuery =
+                `SELECT idx, price, star, period, name, 1 AS isBooked, addr, img FROM (SELECT idx, name, price, star, period, addr, addrIdx, img
+                FROM 
+                    (SELECT idx, name, price, star, period, farmIdx 
+                    FROM nh) AS nh
+                LEFT JOIN 
+                    (SELECT farm.idx AS farmIdx, addr, addrIdx, img 
+                    FROM farm 
+                    LEFT JOIN (select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm 
+                ON nh.farmIdx = farm.farmIdx) AS nh, bookmark WHERE userIdx = ? AND bookmark.nhIdx = nh.idx;`;
 
             // nhIdx별로 농활가격, 평점, 기간(O박O일등), 농활이름, 농장주소, 농장이미지
-            let getBookmarkListResult = await db.queryParamArr(getBookmarkListQuery, [decoded.user_idx, decoded.user_idx]);
+            let getBookmarkListResult = await db.queryParamArr(getBookmarkListQuery, [decoded.user_idx]);
 
             if(!getBookmarkListResult){
                 res.status(500).send({
