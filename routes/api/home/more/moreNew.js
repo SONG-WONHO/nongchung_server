@@ -54,7 +54,7 @@ router.get("/", async (req, res, next) => {
                 let isEnd = 0;
 
                 let checkQuery = `SELECT idx FROM nh_new WHERE idx = ?`;
-                let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+                let checkResult = await db.queryParamArr(checkQuery, [nhIdx + 6 + 1]);
 
                 if (checkResult.length === 0) {
                     isEnd = 1;
@@ -139,7 +139,7 @@ router.get("/", async (req, res, next) => {
                     let isEnd = 0;
 
                     let checkQuery = `SELECT idx FROM nh_new WHERE idx = ?`;
-                    let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+                    let checkResult = await db.queryParamArr(checkQuery, [nhIdx + 6 + 1]);
 
                     if (checkResult.length === 0) {
                         isEnd = 1;

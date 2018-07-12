@@ -48,19 +48,19 @@ router.get("/", async (req, res, next) => {
             //농활리스트가 있다면?
             else {
                 console.log(nhIdx);
-                let selectQuery = `SELECT nh_popular.nhIdx, nh_popular.name, nh_popular.star, nh_popular.price, nh_popular.img, farmer.img
-                FROM nh_popular, nh, farm, farmer
-                WHERE farm.idx = nh.farmIdx 
-                AND nh.idx = nh_popular.nhIdx AND farmer.idx = farm.farmerIdx GROUP BY nh.idx
-                limit ?
-                ,6`;
+                let selectQuery =
+                    `SELECT *
+                    FROM nh_popular
+                    limit ? ,6`;
                 let selectResult = await db.queryParamArr(selectQuery, [nhIdx]);
                 console.log(selectResult);
 
                 let isEnd = 0;
 
-                let checkQuery = `SELECT idx FROM nh_new WHERE idx = ?`;
-                let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+                let checkQuery = `SELECT idx FROM nh_popular WHERE idx = ?`;
+                let checkResult = await db.queryParamArr(checkQuery, [nhIdx + 6 + 1]);
+
+                console.log(checkResult);
 
                 if (checkResult.length === 0) {
                     isEnd = 1;
@@ -136,17 +136,16 @@ router.get("/", async (req, res, next) => {
                 //에러가 없을 때 - 정당한 농활 인덱스라면?
                 else {
                     let selectQuery =
-                        `SELECT nh_popular.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked ,
-                        (SELECT farmer.img FROM farm, nh, farmer WHERE farmer.idx = farm.farmerIdx AND farm.idx = nh.farmidx AND nh.idx = ?) AS farmerImg
-                        FROM NONGHWAL.nh_popular 
+                        `SELECT nh_popular.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                        FROM NONGHWAL.nh_popular
                         LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_popular.nhIdx limit ?, 6;`;
 
-                    let selectResult = await db.queryParamArr(selectQuery, [userIdx, nhIdx, userIdx,nhIdx]);
+                    let selectResult = await db.queryParamArr(selectQuery, [userIdx, userIdx, nhIdx]);
 
                     let isEnd = 0;
 
-                    let checkQuery = `SELECT idx FROM nh_new WHERE idx = ?`;
-                    let checkResult = await db.queryParamArr(checkQuery, nhIdx + 6 + 1);
+                    let checkQuery = `SELECT idx FROM nh_popular WHERE idx = ?`;
+                    let checkResult = await db.queryParamArr(checkQuery, [nhIdx + 6 + 1]);
 
                     if (checkResult.length === 0) {
                         isEnd = 1;
