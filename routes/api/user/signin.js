@@ -21,49 +21,84 @@ router.post('/', async (req, res, next) => {
     } else { //잘 입력 됐다면 ...
 
         //1) db에 등록된 유저가 있는 지 검증
-        let checkQuery = 'SELECT * FROM user WHERE mail = ?';
+        let checkQuery =
+            `
+            SELECT
+                user.mail,
+                user.name,
+                date_format(user.birth,"%Y-%m-%d") AS birth,
+                user.sex,
+                user.hp,
+                user.point,
+                user.img, 
+                user.nickname, 
+                (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age,
+                user.pw,
+                user.salt
+            FROM user WHERE mail = ?;`;
         let checkResult = await db.queryParamArr(checkQuery, [userMail]);
 
-        if (!checkResult) { // 쿼리수행중 에러가 있을 경우
+        //쿼리 수행 중 에러가 있을 경우
+        if (!checkResult) {
             res.status(500).send({
                 message : "Internal Server Error"
             });
 
-        } else if (checkResult.length === 1){ // 유저가 존재할 때
-            //2) 등록된 유저의 패스워드가 저장된 패스워드와 일치하는 지 검증 - hash, salt
+        }
+        //유저가 존재한다면
+        else if (checkResult.length === 1){
+            //등록된 유저의 패스워드가 저장된 패스워드와 일치하는 지 검증 - hash, salt
             let hashedpw = await crypto.pbkdf2(userPw, checkResult[0].salt, 100000, 32, 'sha512');	// 입력받은 pw를 DB에 존재하는 salt로 hashing
 
             //패스워드가 같은 지 검증
-            if (hashedpw.toString('base64') === checkResult[0].pw){ //같다면?
+            if (hashedpw.toString('base64') === checkResult[0].pw){
+                //패스워드가 같다면?
 
+                //유저 인덱스를 포함한 토큰 발급하기
                 let token = jwt.sign(checkResult[0].idx);
-                let InfoshowQuery = `SELECT user.mail, user.name,
-                date_format(user.birth,"%Y-%m-%d") AS birth,
-                user.sex,user.hp, user.point,user.img, user.nickname, (date_format(curdate(),"%Y") - date_format(birth, "%Y") +1) AS age
-                FROM NONGHWAL.user WHERE user.idx = (SELECT user.idx FROM NONGHWAL.user WHERE user.mail = ?)`;
-                let InfoshowResult = await db.queryParamArr(InfoshowQuery,[userMail]);
-                console.log(InfoshowResult);
-                for(let i = 0; i< InfoshowResult.length; i++){
-                    var a = InfoshowResult[i].birth;
-                    var aaa= a.split("-");
-                    console.log(aaa);
-                    var date = aaa[0]+"년 "+aaa[1]+"월 "+aaa[2]+"일";
-                    InfoshowResult[i].birth =date;
-                
+
+                console.log(checkResult);
+
+                //데이트 포맷 바꿔주기
+                for(let i = 0; i < checkResult.length; i++){
+                    let temp = checkResult[i].birth;
+                    temp = temp.split("-");
+                    console.log(temp);
+                    checkResult[i].birth = temp[0]+ "년 "+temp[1]+"월 "+temp[2]+"일";
                 }
+
+                //프론트한테 보내줄 결과 만들기
+                let result = {
+                    mail: checkResult.mail,
+                    name: checkResult.name,
+                    birth: checkResult.birth,
+                    sex: checkResult.sex,
+                    hp: checkResult.hp,
+                    point: checkResult.point,
+                    img: checkResult.img,
+                    nickname: checkResult.nickname,
+                    age: checkResult.age
+                };
+
                 res.status(200).send({
                     message : "Success To Sign In",
                     token : token,
-                    data : InfoshowResult
+                    data : result
                 });
-            } else { //다르다면?
+
+            }
+
+            //만약 패스워드가 다르다면?
+            else {
 
                 res.status(401).send({
                     message : "Fail To Sign In"
                 });
                 console.log("password error");
             }
-        } else { // 유저가 없을 때
+        }
+        //만약 유저가 없다면?
+        else {
 
             res.status(401).send({
                 message : "Fail To Sign In"
@@ -72,6 +107,5 @@ router.post('/', async (req, res, next) => {
         }
     }
 });
-
 
 module.exports = router;

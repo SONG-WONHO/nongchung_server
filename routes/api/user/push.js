@@ -10,11 +10,14 @@ router.post('/', async (req, res, next) => {
     //토큰이 없다면? ==> 기존의 방식으로!
     if (!token) {
 
+        res.status(400).send({
+            message : "No token"
+        })
     }
 
     //토큰이 있다면?
     else {
-        //토큰이 있다면? ==> 이미 신청한 농활이라면? 취소하기 할 수있도록 정보 하나 추가해줘야 한다!!
+        //토큰이 있다면?
         let decoded = jwt.verify(token);
 
         //정당하지 않은 토큰이 들어올 때
@@ -43,9 +46,11 @@ router.post('/', async (req, res, next) => {
             //값이 있다면?
             else {
                 let updateQuery =
-                    `UPDATE NONGHWAL.user 
+                    `
+                    UPDATE NONGHWAL.user 
                     SET token=?, deviceCategory=? 
-                    WHERE idx=?;`;
+                    WHERE idx=?;
+                    `;
 
                 let updateResult = await db.queryParamArr(updateQuery, [deviceToken, deviceCategory, userIdx]);
 

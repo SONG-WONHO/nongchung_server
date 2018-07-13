@@ -9,7 +9,7 @@ module.exports = {
         //옵션
         const options = {
             algorithm : "HS256",
-            expiresIn : 60 * 60 * 24 * 30 //30 days
+            expiresIn : 60 * 60 * 24 * 7 //30 days
         };
 
         //페이로드

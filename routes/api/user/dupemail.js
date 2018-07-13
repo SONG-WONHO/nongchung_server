@@ -18,7 +18,13 @@ router.post('/', async (req, res, next) => {
     } else { //잘 입력 됐다면 ...
 
         //1) db에 등록된 유저가 있는 지 검증
-        let checkQuery = 'SELECT * FROM user WHERE mail = ?';
+        let checkQuery =
+            `
+            SELECT * 
+            FROM user 
+            WHERE mail = ?
+            `;
+
         let checkResult = await db.queryParamArr(checkQuery, [userMail]);
         console.log(checkResult);
 
