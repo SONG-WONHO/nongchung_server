@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const db = require('../../module/db');
-const check = require('../../module/check');
-const jwt = require('../../module/jwt');
-const upload = require('../../config/s3multer').uploadReviewImage;
+const db = require('../../../module/db');
+const check = require('../../../module/check');
+const jwt = require('../../../module/jwt');
+const upload = require('../../../config/s3multer').uploadReviewImage;
 
 //리뷰보기
 //해당 농활의 후기 목록을 불러옴

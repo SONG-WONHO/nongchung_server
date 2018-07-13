@@ -2,158 +2,186 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../../../module/db');
 const jwt = require('../../../../module/jwt');
+const check = require('../../../../module/check');
 
 
 //농장 프로필
-router.get('/:nhIdx', async (req, res) => {
-    var nhIdx = req.params.nhIdx;
-    var token = req.headers.token;
-    if(!nhIdx){
+router.get('/', async (req, res, next) => {
+
+    //농장 인덱스 받기
+    let farmIdx = req.query.idx;
+
+    //토큰 받기
+    let token = req.headers.token;
+
+    //농장 인덱스가 없다면?
+    if(check.checkNull([farmIdx])){
         res.status(400).send({
             message: "Null value"
         })
-    }else{
-        if(!token){//토큰이 없다면
-            let farmQuery = `SELECT farmer.idx AS farmerIdx,
-            farm.addr,
-            farm.name AS farmName
-            ,farmer.fname AS farmerName, 
-            farmer.img AS farmerImg, 
-            farmer.fphone,
-            farmer.comment
-            FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
-            WHERE farm.farmerIdx = farmer.idx AND nh.farmIdx = farm.idx AND nh.idx = ? `;//농부프로필~~!
-            let farmResult = await db.queryParamArr(farmQuery,[nhIdx]);
-            var farmerIdx = farmResult[0]["farmerIdx"]
+    }
 
+    //농장 인덱스가 있다면?
+    else{
+        //토큰이 없다면
+        if(!token){
 
-            let nhInfoQuery1 = `SELECT nh.name AS nhName, farm.addr AS farmAddr, nh.period, nh.price, 
-            nh.idx AS nhIdx,
-            farm.idx AS farmIdx,
-            CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > nh.wtime THEN 0
-            ELSE 1
-            END AS 'newState',
-            (SELECT img
-FROM (SELECT nh.idx, nh.farmIdx FROM nh) AS nh
-LEFT JOIN
-(SELECT farm.idx AS farmIdx, farm_img.img
-FROM farm
-LEFT JOIN(select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm ON nh.farmIdx = farm.farmIdx
-WHERE nh.idx = ?) AS img
+            //농장 뽑기
+            let farmQuery =
+                `
+                SELECT
+                    farm.idx,
+					farm.name AS farmName,
+                    farm.addr AS farmAddr,
+                    farmer.fname AS farmerName,
+                    farmer.fphone AS farmerPhone,
+                    farmer.comment AS farmerComment,
+                    farmer.img AS farmerImg
+                FROM (
+                    SELECT * FROM farm 
+                    INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
+                    ON farm.idx = farm_img.farmIdx) AS farm 
+                LEFT JOIN farmer 
+                ON farm.farmerIdx = farmer.idx
+                WHERE farm.idx = ?;
+                `;
 
-			FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
-            WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND 
-							farmer.idx = (SELECT farmer.idx 
-											FROM NONGHWAL.farm, NONGHWAL.nh,NONGHWAL.farmer 
-											WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND nh.idx = ?)
-                                            `;
-        
-            
+            let farmResult = await db.queryParamArr(farmQuery,[farmIdx]);
 
-            let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx,nhIdx]);
+            //농장 인덱스에 해당하는 농활 뽑기
+            let nhInfoQuery =
+                `
+                SELECT 
+                    nh.idx AS nhIdx, 
+                    price, 
+                    name AS nhName, 
+                    period, 
+                    farm_img.img AS farmImg 
+                FROM nh 
+                LEFT JOIN (SELECT * FROM farm_img group by farmIdx) AS farm_img 
+                ON farm_img.farmIdx = nh.farmIdx 
+                WHERE nh.farmIdx = ?;
+                `;
 
+            let nhInfoResult = await db.queryParamArr(nhInfoQuery,[farmIdx]);
 
-
-            console.log(nhInfoResult);
-            if(!nhInfoResult || !imgResult || !farmResult ){
+            //쿼리 수행 중에 에러가 있다면?
+            if(!nhInfoResult && !farmResult ){
                 res.status(500).send({
                     message:"Internal server Error!"
                 });
-            }else{
+            }
+
+            //에러 없이 잘 됐다면?
+            else{
                 res.status(200).send({
-                    message:"success TO show farmer profile",
+                    message:"Success To Show Farmer Profile",
                     farmerInfo : farmResult[0],
-                    data : nhInfoResult
+                    nhInfo : nhInfoResult
                 })
             }
 
-        }else{
-            
-        
-            var decoded = jwt.verify(token);
-            if(decoded == -1){
+        }
+        //토큰이 있다면?
+        else{
+
+            let decoded = jwt.verify(token);
+
+            //토큰 에러
+            if(decoded === -1){
                 res.status(500).send({
                     message:"token error"
                 });
-            }else{
-                let farmQuery = `SELECT farmer.idx AS farmerIdx,
-                farm.addr,
-                farm.name AS farmName
-                ,farmer.fname AS farmerName, 
-                farmer.img AS farmerImg, 
-                farmer.fphone,
-                farmer.comment
-                FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
-                WHERE farm.farmerIdx = farmer.idx AND nh.farmIdx = farm.idx AND nh.idx = ? `;//농부프로필~~!
-                let farmResult = await db.queryParamArr(farmQuery,[nhIdx]);
-                var farmerIdx = farmResult[0]["farmerIdx"]
+            }
 
+            //토큰 에러가 없다면?
+            else{
 
-                let nhInfoQuery1 = `SELECT nh.name AS nhName, farm.addr AS farmAddr, nh.period, nh.price, 
-                nh.idx AS nhIdx,
-                farm.idx AS farmIdx,
-                CASE WHEN date_sub(curdate(), INTERVAL 1 MONTH) > nh.wtime THEN 0
-                ELSE 1
-                END AS 'newState'
-                ,(SELECT img
-                    FROM (SELECT nh.idx, nh.farmIdx FROM nh) AS nh
-                    LEFT JOIN
-                    (SELECT farm.idx AS farmIdx, farm_img.img
-                    FROM farm
-                    LEFT JOIN(select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm ON nh.farmIdx = farm.farmIdx
-                    WHERE nh.idx = ?) AS img
+                //농장 프로필 얻기
+                let farmQuery =
+                    `
+                    SELECT
+                        farm.idx,
+                        farm.name AS farmName,
+                        farm.addr AS farmAddr,
+                        farmer.fname AS farmerName,
+                        farmer.fphone AS farmerPhone,
+                        farmer.comment AS farmerComment,
+                        farmer.img AS farmerImg
+                    FROM (
+                        SELECT * FROM farm 
+                        INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
+                        ON farm.idx = farm_img.farmIdx) AS farm 
+                    LEFT JOIN farmer 
+                    ON farm.farmerIdx = farmer.idx
+                    WHERE farm.idx = ?;
+                    `;
 
-	    		FROM NONGHWAL.farm, NONGHWAL.farmer, NONGHWAL.nh
-                WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND 
-			    				farmer.idx = (SELECT farmer.idx 
-				    							FROM NONGHWAL.farm, NONGHWAL.nh,NONGHWAL.farmer 
-					    						WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND nh.idx = ?)
-                                                `;
-            
-                let imgQuery = `SELECT SUBSTRING_INDEX(GROUP_CONCAT(farm_img.img SEPARATOR '|'),"|",1) AS farmImg, farm.idx AS farmIdx FROM NONGHWAL.farm, NONGHWAL.farm_img
-                WHERE farm.idx = farm_img.farmIdx AND farm.farmerIdx = ?
-                group by farm.idx `;
-            
-            
+                //결과
+                let farmResult = await db.queryParamArr(farmQuery,[farmIdx]);
 
-                let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx,nhIdx]);
-                let imgResult = await db.queryParamArr(imgQuery,[farmerIdx]);
+                //농장 인덱스에 해당하는 농활 뽑기
+                let nhInfoQuery =
+                    `
+                    SELECT 
+                        nh.idx AS nhIdx, 
+                        price, 
+                        name AS nhName, 
+                        period, 
+                        farm_img.img AS farmImg,
+                        0 AS isBooked 
+                    FROM nh 
+                    LEFT JOIN (SELECT * FROM farm_img group by farmIdx) AS farm_img 
+                    ON farm_img.farmIdx = nh.farmIdx 
+                    WHERE nh.farmIdx = ?;                    
+                    `;
 
-                console.log(nhInfoResult);
-                console.log(imgResult);
-            
+                let nhInfoResult = await db.queryParamArr(nhInfoQuery, [farmIdx]);
 
-            
-                for(let a = 0; a <nhInfoResult.length; a++){
+                let selectBookQuery =
+                    `
+                    SELECT nhIdx 
+                    FROM bookmark 
+                    WHERE userIdx = ?
+                    `;
 
-                    let checkBookedQuery = `SELECT EXISTS (SELECT * FROM bookmark WHERE userIdx = ? AND nhIdx = ?) as isBooked`;
-                    let checkBookedResult = await db.queryParamArr(checkBookedQuery, [decoded.user_idx, nhInfoResult[a]["nhIdx"]]);
-                    console.log(checkBookedResult);
-                    nhInfoResult[a].isBooked = checkBookedResult[0]["isBooked"];
-                    if(!checkBookedResult){
-                        res.status(500).send({
-                            message:"Internal server Error!"
-                        });
-                    }   
-                }
+                let selectBookResult = await db.queryParamArr(selectBookQuery, [decoded.user_idx]);
 
-                console.log(nhInfoResult);
-                if(!nhInfoResult || !imgResult || !farmResult ){
+                //쿼리 수행도중 에러가 있을 때
+                if (!selectBookResult && !nhInfoResult && !farmResult) {
                     res.status(500).send({
                         message:"Internal server Error!"
                     });
-                }else{
-                    res.status(200).send({
-                        message:"success TO show farmer profile",
-                            farmerInfo : farmResult[0],
-                        data : nhInfoResult
-                    })
+
+                    return;
                 }
+
+                let bookList = [];
+
+                // 예약한 것이 있을 때
+                if (selectBookResult.length >= 1) {
+
+                    for (let i = 0; i < selectBookResult.length; i ++) {
+                        bookList.push(selectBookResult[i].nhIdx)
+                    }
+
+                    for (let i = 0; i < nhInfoResult.length; i++) {
+
+                        //북마크 리스트에 농활이 있을 때
+                        if(bookList.indexOf(nhInfoResult[i].nhIdx) !== -1) {
+                            nhInfoResult[i].isBooked = 1;
+                        }
+                    }
+                }
+
+                res.status(200).send({
+                    message:"Success To Show Farmer Profile",
+                    farmerInfo : farmResult,
+                    nhInfo : nhInfoResult
+                })
             }
         }
     }
 });
-
-
 
 module.exports = router;

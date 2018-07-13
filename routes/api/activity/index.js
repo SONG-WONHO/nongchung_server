@@ -130,7 +130,11 @@ router.get('/complete',async (req,res)=>{
             
             let totalQuery = `SELECT COUNT(s.idx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
+<<<<<<< HEAD
             WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND s.state= ?;`
+=======
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`;
+>>>>>>> e2300fe046c28dda94cc5505cad6c7207bcb5bda
 
             let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,2]);
             let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx,decoded.user_idx]);
