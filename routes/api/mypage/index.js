@@ -236,7 +236,7 @@ router.get('/myreview', async (req,res)=>{
                                             ON farm_img.farmIdx = farm.farmIdx GROUP BY nhIdx) AS farm
             ON schedule.nhIdx = farm.nhIdx) AS farm
             ON farm.scheIdx = review.scheIdx
-            WHERE userIdx = `;
+            WHERE userIdx =?`;
             
             
             /*`SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%m-%d") AS startDate, r.img
