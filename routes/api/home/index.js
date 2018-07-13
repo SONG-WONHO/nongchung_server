@@ -59,14 +59,26 @@ router.get('/', async (req, res, next) => {
         //인기농장뽑기
         let selectFarmQuery =
             `
-            SELECT farm.idx AS farmIdx, farm.name, farm.addr, farm.farmImg, farmer.img AS farmerImg FROM (SELECT * FROM farm INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm LEFT JOIN farmer ON farm.farmerIdx = farmer.idx;
+            SELECT 
+                farm.idx AS farmIdx, 
+                farm.name, farm.addr, 
+                farm.farmImg, 
+                farmer.img AS farmerImg 
+            FROM (
+                SELECT * FROM farm 
+                INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
+                ON farm.idx = farm_img.farmIdx) AS farm 
+            LEFT JOIN farmer 
+            ON farm.farmerIdx = farmer.idx
+            limit 0,6;
             `;
 
         let selectPopulNhResult = await db.queryParamNone(selectPopulNhQuery);
         let selectNewNhResult = await db.queryParamNone(selectNewNhQuery);
+        let selectFarmResult = await db.queryParamNone(selectFarmQuery);
 
         //쿼리 수행도중 에러가 있을 때
-        if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult) {
+        if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult && !selectFarmResult) {
             res.status(500).send({
                 message : "Internal Server Error"
             });
@@ -75,31 +87,12 @@ router.get('/', async (req, res, next) => {
         //에러가 없다면?
         else {
 
-            //인기농장
-            let populFarm = [
-                {
-                    "idx":2,
-                    "addr":"제주 서귀포시",
-                    "name":"경주 사과농장"
-                },
-                {
-                    "idx":2,
-                    "addr":"제주 서귀포시",
-                    "name":"부산 사과농장"
-                },
-                {
-                    "idx":2,
-                    "addr":"제주 서귀포시",
-                    "name":"대전 포도농장"
-                }
-            ];
-
             res.status(200).send({
                 message : "Success To Get Information",
                 "ads": selectAdResult,
                 "populNh":selectPopulNhResult,
                 "newNh": selectNewNhResult,
-                "populFarm":populFarm
+                "populFarm":selectFarmResult
             })
         }
     }
@@ -129,49 +122,54 @@ router.get('/', async (req, res, next) => {
 
             //인기농활뽑기
             let selectPopulNhQuery =
-                `SELECT nh_popular.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                `
+                SELECT nh_popular.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
                 FROM NONGHWAL.nh_popular 
-                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_popular.nhIdx limit 0, 6;`;
+                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_popular.nhIdx limit 0, 6;
+                `;
+
             //새로운농활뽑기
             let selectNewNhQuery =
-                `SELECT nh_new.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
+                `
+                SELECT nh_new.nhIdx, name, price, star, period, addr, img, idx, if(userIdx = ?, 1, 0) AS isBooked 
                 FROM NONGHWAL.nh_new
-                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_new.nhIdx limit 0, 6;`;
+                LEFT JOIN (SELECT * FROM bookmark WHERE userIdx = ?) AS bookmark on bookmark.nhIdx = nh_new.nhIdx limit 0, 6;
+                `;
+
+            //인기농장뽑기
+            let selectFarmQuery =
+                `
+                SELECT 
+                    farm.idx AS farmIdx, 
+                    farm.name, farm.addr, 
+                    farm.farmImg, 
+                    farmer.img AS farmerImg 
+                FROM (
+                    SELECT * FROM farm 
+                    INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
+                    ON farm.idx = farm_img.farmIdx) AS farm 
+                LEFT JOIN farmer 
+                ON farm.farmerIdx = farmer.idx
+                limit 0,6;
+                `;
 
             let selectPopulNhResult = await db.queryParamArr(selectPopulNhQuery, [userIdx, userIdx]);
             let selectNewNhResult = await db.queryParamArr(selectNewNhQuery, [userIdx, userIdx]);
+            let selectFarmResult = await db.queryParamNone(selectFarmQuery);
 
-            if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult) {
+            if (!selectAdResult && !selectPopulNhResult && !selectNewNhResult && !selectFarmResult) {
                 res.status(500).send({
                     message : "Internal Server Error"
                 });
             }
             else {
-                //인기 농장
-                let populFarm = [
-                    {
-                        "idx":2,
-                        "addr":"제주 서귀포시",
-                        "name":"경주 사과농장"
-                    },
-                    {
-                        "idx":2,
-                        "addr":"제주 서귀포시",
-                        "name":"부산 사과농장"
-                    },
-                    {
-                        "idx":2,
-                        "addr":"제주 서귀포시",
-                        "name":"대전 포도농장"
-                    }
-                ];
 
                 res.status(200).send({
                     message : "Success To Get Information",
                     "ads": selectAdResult,
                     "populNh":selectPopulNhResult,
                     "newNh":selectNewNhResult,
-                    "populFarm":populFarm
+                    "populFarm":selectFarmResult
                 })
             }
         }
