@@ -7,7 +7,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 //매일매일 실행할 작업
-// const scheduler = require('./module/schdule');
+const scheduler = require('./module/schdule');
+
+//광고 주기적으로 전송
+// const schedulerAd = require('./module/scheduleAd');
 
 const indexRouter = require('./routes/index');
 
