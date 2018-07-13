@@ -15,7 +15,7 @@ router.get('/', async (req, res, next) => {
     let token = req.headers.token;
 
     //농장 인덱스가 없다면?
-    if(check.checkNull(farmIdx)){
+    if(check.checkNull([farmIdx])){
         res.status(400).send({
             message: "Null value"
         })
