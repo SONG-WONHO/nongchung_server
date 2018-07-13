@@ -24,6 +24,7 @@ router.post('/', async (req, res, next) => {
         let checkQuery =
             `
             SELECT
+                user.idx,
                 user.mail,
                 user.name,
                 date_format(user.birth,"%Y-%m-%d") AS birth,
