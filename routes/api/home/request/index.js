@@ -37,12 +37,8 @@ router.post('/', async (req, res, next) => {
             //인덱스 받기
             let nhIdx = req.body.nhIdx;
             let schIdx = req.body.schIdx;
-<<<<<<< HEAD
             let personNum = req.body.personNum || 0;
             let flag = 0;
-=======
-            let personNum = req.body.personNum || 1;
->>>>>>> e2300fe046c28dda94cc5505cad6c7207bcb5bda
 
             if(check.checkNull([nhIdx, schIdx])) {
                 res.status(400).send({
@@ -72,6 +68,8 @@ router.post('/', async (req, res, next) => {
                         /*토큰으로 들어온 유저가 신청중인 스케쥴을 확인하고,
                         해당 스케쥴이 그 유저가 이미 신청중인 스케쥴에 중복된다면 중복!
                         */
+
+                        //신청중 0 // 마감 1
                         selectQuery =
                             `SELECT * 
                             FROM schedule 
