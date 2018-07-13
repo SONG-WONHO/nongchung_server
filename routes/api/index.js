@@ -6,7 +6,9 @@ const signinRouter = require('./user/signin');
 const signupRouter = require('./user/signup');
 const dupEmailRouter = require('./user/dupemail');
 const dupNickRouter = require('./user/dupnickname');
-const pushRouter = require('./user/push');
+
+//PUSH
+const pushRouter = require('./push/index');
 
 //TAP - home, search, bookmark, acitvity, mypage
 const homeRouter = require('./home/index');
@@ -22,6 +24,7 @@ router.use('/signin', signinRouter);
 router.use('/signup', signupRouter);
 router.use('/dup-email', dupEmailRouter);
 router.use('/dup-nickname', dupNickRouter);
+
 router.use('/push', pushRouter);
 
 router.use('/home', homeRouter);
