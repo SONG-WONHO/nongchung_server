@@ -69,7 +69,7 @@ router.post('/', async (req, res, next) => {
                 }
 
                 //프론트한테 보내줄 결과 만들기
-                let result = {
+                let result = [{
                     mail: checkResult[0].mail,
                     name: checkResult[0].name,
                     birth: checkResult[0].birth,
@@ -79,7 +79,7 @@ router.post('/', async (req, res, next) => {
                     img: checkResult[0].img,
                     nickname: checkResult[0].nickname,
                     age: checkResult[0].age
-                };
+                }];
 
                 console.log(result);
 
