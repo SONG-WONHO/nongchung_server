@@ -38,12 +38,14 @@ router.post('/', async (req, res, next) => {
             let nhIdx = req.body.nhIdx;
             let schIdx = req.body.schIdx;
             let personNum = req.body.personNum || 0;
+            let flag = 0;
 
             if(check.checkNull([nhIdx, schIdx])) {
                 res.status(400).send({
                     message: "Null Value"
                 })
             } else {
+                
 
                 let selectQuery = "SELECT * FROM schedule WHERE idx = ? AND nhIdx = ?";
                 let selectResult = await db.queryParamArr(selectQuery,[schIdx, nhIdx]);
@@ -104,10 +106,9 @@ router.post('/', async (req, res, next) => {
 
                                 //사람수가 사용자가 원하는 숫자 이상인가? 즉, 가능한가?
                                 if (selectResult[0].isAvailPerson) {
-
-                                    let insertQuery = `INSERT INTO activity (userIdx, state, scheIdx) VALUES (?, ?, ?);`;
-                                    let insertResult = await db.queryParamArr(insertQuery, [decoded.user_idx, 0, schIdx]);
-
+                                    
+                                    let insertQuery = `INSERT INTO activity (userIdx, scheIdx) VALUES (?, ?);`;
+                                    let insertResult = await db.queryParamArr(insertQuery, [decoded.user_idx, schIdx]);
                                     //쿼리 수행 중 에러가 있다면?
                                     if (!insertResult){
                                         res.status(500).send({
@@ -115,9 +116,18 @@ router.post('/', async (req, res, next) => {
                                         });
                                         return;
                                     }
+                                    //신청을 눌르고 입금의 경우는 0으로 바뀌는 경우가 있다.
+                                    
+                                    //activity가 1인 거 한해서 person plus를 해준다.
+                                    
+                                    let updateQuery = `UPDATE schedule SET person = 
+                                    (SELECT count(*) FROM activity WHERE scheIdx = ? AND state = ?) 
+                                    WHERE idx = ?`;
+                                    let updateResult = await db.queryParamArr(updateQuery, [schIdx,1,schIdx]);
+                                    let countQuery = `SELECT count(*) AS personCount FROM activity WHERE scheIdx = ?  AND state = ?`;
+                                    let countResult = await db.queryParamArr(countQuery,[schIdx,1]);
+                                    console.log(countResult[0].personCount);
 
-                                    let updateQuery = `UPDATE schedule SET person = person + 1 WHERE idx = ?`;
-                                    let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
 
                                     let stateQuery = `UPDATE schedule SET state = 
                                     CASE
@@ -126,22 +136,23 @@ router.post('/', async (req, res, next) => {
                                         THEN 1
                                         ELSE 0
                                         END
-                                    WHERE idx = ?`;
+                                    WHERE idx = ?`;//만약에 리미트를 person이 넘었으면??--> 0: 신청가능 1 
                                     let stateResult = await db.queryParamArr(stateQuery, [nhIdx,schIdx]);
 
                                     //업데이트 쿼리 수행 중 에러가 있다면?
-                                    if (!updateResult){
-                                        res.status(500).send({
-                                            message : "Internal Server Error"
-                                        });
-                                        return;
-                                    }
+                                        if (!updateResult && !stateQuery && !countResult){
+                                            res.status(500).send({
+                                                message : "Internal Server Error"
+                                                });
+                                                return;
+                                            }  
 
-                                    res.status(200).send({
-                                        message: "Success To Request For Application",
-                                        maxPerson: selectResult[0].personLimit,
-                                        currentPerson:selectResult[0].person + 1
-                                    })
+                                            res.status(200).send({
+                                                message: "Success To Request For Application",
+                                                maxPerson: selectResult[0].personLimit,
+                                                currentPerson: countResult[0].personCount
+                                        })
+                                    
                                 } else {
                                     res.status(400).send({
                                         message:"Fail To Request For Application, No Available Person Number"
@@ -208,16 +219,16 @@ router.put('/', async (req, res, next) => {
                     });
                     return;
                 }
-
+                // state가 1인 경우에 의해서
                 let updateQuery = `UPDATE schedule SET person = 
-                (CASE WHEN ((person - 1)<0)
+                (CASE WHEN ((SELECT count(*) FROM activity WHERE scheIdx = ? AND state = ?)<0)
                 THEN 0 
                 ELSE
-                (person - 1)
+                (SELECT count(*) FROM activity WHERE scheIdx = ? AND state = ?)
                 END
                 )
                 WHERE idx = ?`;
-                let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
+                let updateResult = await db.queryParamArr(updateQuery, [schIdx,1,schIdx,1,schIdx]);
                 let selectQuery = `SELECT a.scheIdx AS myScheIdx FROM NONGHWAL.activity AS a, NONGHWAL.user AS u WHERE a.userIdx = u.idx AND u.idx = ?`;
                 let selectResult = await db.queryParamArr(selectQuery,[decoded.user_idx]);
                 let myScheIdx1 = [];

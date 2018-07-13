@@ -44,67 +44,102 @@ router.get('/complete',async (req,res)=>{
             //2 : 완료 | 3 : 취소
 
 
+            // 1의 경우 마감일이 지났??--> 확정 (4) 1인데 마감일이 안 지났으면? 그대로 1
+            // 0의 경우 마감일이 지났??--> 취소 (3) 0인데 마감일이 안지났으면? 그대로 0
 
+            
+            // 확정(4)인 경우 startDate 지났?? 완료 (2) 마감일이 안 지났으면 4            
 
-            let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
-            ON a.scheIdx = s.idx 
-            SET a.state = ?
-            WHERE s.deadline > CURDATE()`; //데드라인이 안넘는 것
+            // 입금 대기 : 0,  입금 확정 : 1 --> (scheState 0과 1로 보내자)
+            // 2: 완료(sche: 5)   3: 취소 (sche : scheStete 0인데 마감이 지났다. )      4: 확정( sche: 4)
 
-            //조건 추가 
-            let stateResult = await db.queryParamArr(stateQuery,[0]);
-            for(let a= 0 ;a<timeResult.length; a++){
-                if(dicSchePerson[timeResult[a].idx]>dicMinPerson[timeResult[a].idx]){
-                    let stateQuery2 = `
-                    UPDATE NONGHWAL.activity AS a
-                    JOIN NONGHWAL.schedule AS s 
-                    ON a.scheIdx = s.idx 
-                    SET a.state = ?
-                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 넘은 것
-                    let stateResult2 = await db.queryParamArr(stateQuery2,[1,timeResult[a].idx]);
-                    if(!stateResult2){
-                        res.status(500).send({
-                            message:"Internal server error!"
-                        });
-                    }
-                }else{
-                    let stateQuery1 = `
-                    UPDATE NONGHWAL.activity AS a
-                    JOIN NONGHWAL.schedule AS s 
-                    ON a.scheIdx = s.idx 
-                    SET a.state = ?
-                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
-                    let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
-                    if(!stateResult2){
-                        res.status(500).send({
-                            message:"Internal server error!"
-                        });
-                    }
-                }
+            //데드라인이 지난 경우
+            let scheSelectQuery = `SELECT *
+            FROM (SELECT personLimit, idx FROM nh) AS nh
+            JOIN(
+            SELECT *
+            FROM (SELECT state,nhIdx, idx FROM schedule) AS schedule
+            JOIN(
+            SELECT scheIdx FROM activity WHERE userIdx = ?) AS activity 
+            ON(schedule.idx = activity.scheIdx)) AS activity
+            ON activity.nhIdx = nh.idx`;
+            let scheSelectResult = await db.queryParamArr(scheSelectQuery,[decoded.user_idx]);
+
+            for(let a = 0; a< scheSelectResult.length;a++){
+
                 
+                let scheStateQuery = `UPDATE schedule SET state = 
+                CASE
+                WHEN deadline < CURDATE()
+                THEN 4
+                ELSE 1
+                END
+                WHERE
+                state = 1 AND idx = ?`;//1인 경우 마감일이 지났니??
+                
+                let scheStateQuery1 = `UPDATE schedule SET state = 
+                CASE
+                WHEN deadline < CURDATE()
+                THEN 3
+                ELSE 0
+                END
+                WHERE
+                (state = 0 AND idx = ?)`;//0인 경우 마감일이 지났니??
+                let scheStateQuery2 = `UPDATE schedule set state =
+                CASE
+                WHEN startDate < CURDATE()
+                THEN 2
+                ELSE 4
+                END
+                WHERE
+                state = 4 AND idx = ?`;
+                //4인 경우 startDate 지났니?? 
+                let scheStateResult = await db.queryParamArr(scheStateQuery,[scheSelectResult[a]["scheIdx"]]);
+                let scheStateResult1 = await db.queryParamArr(scheStateQuery1,[scheSelectResult[a]["scheIdx"]]);
+                let scheStateResult2 = await db.queryParamArr(scheStateQuery2,[scheSelectResult[a]["scheIdx"]]);
+                console.log(scheSelectResult[a]["scheIdx"]);
+                //console.log(scheStateResult);
+                console.log(scheStateResult1);
+                //console.log(scheStateResult2);
+                /*if(!scheStateResult2 && !scheStateResult1 && !scheStateResult2){
+                    res.status(500).send({
+                        message:"Internal server error"
+                    });
+                    return;
+                }*/
                 
             }
+        
             
 
             
-            let activityQuery = `SELECT date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
-            f.addr, n.period, n.name, a.state, n.price,
-            abs(n.personLimit - s.person) as currentPerson,
-            s.person, n.personLimit, s.idx,i.img
-            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
-            AND a.userIdx = u.idx AND u.idx = ? AND a.state = ? GROUP BY s.idx`;
+            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate
+            FROM(SELECT userIdx, state, schState, scheIdx
+                        FROM (SELECT userIdx,state, scheIdx FROM activity) AS activity
+                        LEFT JOIN(SELECT idx, state AS schState FROM schedule ) AS schedule
+                        ON schedule.idx = activity.scheIdx WHERE userIdx= ?) AS Stable
+                        LEFT JOIN(
+            SELECT  s.idx, date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
+                        f.addr, n.period, n.name, n.price,
+                        abs(n.personLimit - s.person) as currentPerson,
+                        s.person, n.personLimit, i.img
+                        FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
+                        WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
+                        AND a.userIdx = u.idx AND u.idx = ? GROUP BY s.idx) AS nh
+                        ON Stable.scheIdx = nh.idx`;
             
-            let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
+            let totalQuery = `SELECT COUNT(s.idx) AS tcount, SUM(n.volunTime) AS ttime 
             FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND s.state= ?;`
 
-            let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,1]);
-            let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx,1]);
-            
+            let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,2]);
+            let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx,decoded.user_idx]);
             let reviewQuery = `SELECT r.scheIdx, r.idx  FROM NONGHWAL.review AS r WHERE r.userIdx = ?`;
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
-            
+            //console.log(activityResult);
+
+
+
             let reviewList = [];
             
             for(let r = 0; r<reviewResult.length; r++){
@@ -118,8 +153,22 @@ router.get('/complete',async (req,res)=>{
                 }else{//없으면
                     value.rState = 0;
                 }
+                
+            for(let k  = 0; k< activityResult.length ; k++){
+                
+                if(activityResult[k]["schState"] == 3 || activityResult[k]["schState"] == 2 || activityResult[k]["schState"] == 4){
+                    activityResult[k]["state"] = activityResult[k]["schState"];
+                    
+                    
+                }else{
+                    activityResult[k]["state"] = activityResult[k]["Astate"];
+                }
+            }
+            
+            
+            
             });
-            if(!activityResult || !totalResult ||!reviewResult || !timeResult || !stateResult){
+            if(!activityResult && !totalResult && !reviewResult && !timeResult && !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
@@ -132,7 +181,6 @@ router.get('/complete',async (req,res)=>{
             }
         }   
     }
-
 });
 
 
@@ -157,7 +205,6 @@ router.get('/', async (req,res)=>{
             WHERE a.scheIdx = s.Idx AND s.nhIdx = n.idx AND a.userIdx = ?`;
             let timeResult = await db.queryParamArr(timeQuery,[decoded.user_idx]);
             
-
             let dicMinPerson={};//농활최소인원 딕셔너리 만들기
             for(let j = 0; j<timeResult.length ; j++){
                 dicMinPerson[timeResult[j].idx]=timeResult[j].minPerson;
@@ -168,99 +215,121 @@ router.get('/', async (req,res)=>{
                 dicSchePerson[timeResult[a].idx] = timeResult[a].person;
             }//키값: 농활스케듈 인덱스, 벨류값: 농활스케쥴에 참여한 인원
 
-                    //취소 2 , 완료 1, 신청중 0
-            let stateQuery = `UPDATE NONGHWAL.activity AS a JOIN NONGHWAL.schedule AS s 
-            ON a.scheIdx = s.idx 
-            SET a.state = ?
-            WHERE s.deadline > CURDATE()`; //데드라인이 안넘는 것
-            let stateResult = await db.queryParamArr(stateQuery,[0]);
-            for(let a= 0 ;a<timeResult.length; a++){
-                if(dicSchePerson[timeResult[a].idx]>dicMinPerson[timeResult[a].idx]){
-                    let stateQuery2 = `
-                    UPDATE NONGHWAL.activity AS a
-                    JOIN NONGHWAL.schedule AS s 
-                    ON a.scheIdx = s.idx 
-                    SET a.state = ?
-                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 넘은 것
-                    let stateResult2 = await db.queryParamArr(stateQuery2,[1,timeResult[a].idx]);
-                }else{
-                    let stateQuery1 = `
-                    UPDATE NONGHWAL.activity AS a
-                    JOIN NONGHWAL.schedule AS s 
-                    ON a.scheIdx = s.idx 
-                    SET a.state = ?
-                    WHERE s.deadline < CURDATE() AND s.idx =?`;//데드라인이 넘었는데 미니멈 안 넘은 것
-                    let stateResult2 = await db.queryParamArr(stateQuery1,[2,,timeResult[a].idx]);
-                }
+            //0 : 입금 대기(신청중) | 1: 입금 완료 (신청중)
+            //2 : 완료 | 3 : 취소
+
+
+            // 1의 경우 마감일이 지났??--> 확정 (4) 1인데 마감일이 안 지났으면? 그대로 1
+            // 0의 경우 마감일이 지났??--> 취소 (3) 0인데 마감일이 안지났으면? 그대로 0
+
+            
+            // 확정(4)인 경우 startDate 지났?? 완료 (2) 마감일이 안 지났으면 4            
+
+            // 입금 대기 : 0,  입금 확정 : 1 --> (scheState 0과 1로 보내자)
+            // 2: 완료(sche: 5)   3: 취소 (sche : scheStete 0인데 마감이 지났다. )      4: 확정( sche: 4)
+
+            //데드라인이 지난 경우
+            let scheSelectQuery = `SELECT scheIdx FROM activity WHERE userIdx = ?`;
+            let scheSelectResult = await db.queryParamArr(scheSelectQuery,[decoded.user_idx]);
+
+            for(let a = 0; a< scheSelectResult.length;a++){
+                let scheStateQuery = `UPDATE schedule SET state = 
+                CASE
+                WHEN deadline < CURDATE()
+                THEN 4
+                ELSE 1
+                END
+                WHERE
+                state = 1 AND idx = ?`;//1인 경우 마감일이 지났니??
+                let scheStateQuery1 = `UPDATE schedule SET state = 
+                CASE
+                WHEN deadline < CURDATE()
+                THEN 3
+                ELSE 0
+                END
+                WHERE
+                state = 0 AND idx = ?`;//0인 경우 마감일이 지났니??
+                let scheStateQuery2 = `UPDATE schedule set state =
+                CASE
+                WHEN startDate < CURDATE()
+                THEN 2
+                ELSE 4
+                END
+                WHERE
+                state = 4 AND idx = ?`;
+                //4인 경우 startDate 지났니?? 
+                let scheStateResult = await db.queryParamArr(scheStateQuery,[decoded.user_idx,scheSelectResult[a]["scheIdx"]]);
+                let scheStateResult1 = await db.queryParamArr(scheStateQuery1,[decoded.user_idx,scheSelectResult[a]["scheIdx"]]);
+                let scheStateResult2 = await db.queryParamArr(scheStateQuery2,[decoded.user_idx,scheSelectResult[a]["scheIdx"]]);
+                
             }
+        
             
 
             
-            let activityQuery = `SELECT date_format(s.startDate, "%Y.%c.%d") AS startDate,
-            date_format(s.endDate, "%Y.%c.%d") AS endDate , 
-            f.addr, n.period, n.name, a.state, n.price,
-            abs(n.personLimit - s.person) as currentPerson,
-            s.person, n.personLimit, s.idx, i.img
-            FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f,NONGHWAL.farm_img AS i, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
-            AND a.userIdx = u.idx AND u.idx = ? GROUP BY s.idx`;
-            let totalQuery = `SELECT COUNT(a.scheIdx) AS tcount, SUM(n.volunTime) AS ttime 
-            FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
-            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND a.state= ?;`
-            let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,1]);
-            let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx]);
+            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate
+            FROM(SELECT userIdx, state, schState, scheIdx
+                        FROM (SELECT userIdx,state, scheIdx FROM activity) AS activity
+                        LEFT JOIN(SELECT idx, state AS schState FROM schedule ) AS schedule
+                        ON schedule.idx = activity.scheIdx WHERE userIdx= ?) AS Stable
+                        LEFT JOIN(
+            SELECT  s.idx, date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
+                        f.addr, n.period, n.name, n.price,
+                        abs(n.personLimit - s.person) as currentPerson,
+                        s.person, n.personLimit, i.img
+                        FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
+                        WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND n.farmIdx = f.idx AND i.farmIdx = f.idx
+                        AND a.userIdx = u.idx AND u.idx = ? GROUP BY s.idx) AS nh
+                        ON Stable.scheIdx = nh.idx`;
             
+            let totalQuery = `SELECT COUNT(s.idx) AS tcount, SUM(n.volunTime) AS ttime 
+            FROM NONGHWAL.activity AS a, NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u 
+            WHERE a.scheIdx = s.idx AND s.nhIdx = n.idx AND a.userIdx = u.idx AND u.idx =? AND s.state= ?;`
+
+            let totalResult = await db.queryParamArr(totalQuery,[decoded.user_idx,2]);
+            let activityResult = await db.queryParamArr(activityQuery,[decoded.user_idx,decoded.user_idx]);
             let reviewQuery = `SELECT r.scheIdx, r.idx  FROM NONGHWAL.review AS r WHERE r.userIdx = ?`;
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
-            
+            console.log(activityResult);
+
+
+
             let reviewList = [];
-            let dicReview={};//리뷰인덱스에 해당하는 스케듈값
-            for(let j = 0; j<reviewResult.length ; j++){
-                dicReview[reviewResult[j].scheIdx]=reviewResult[j].idx;
-            }
-            console.log(dicReview);
-            console.log(Object.keys(dicReview));
-        
-                if(totalResult[0]["tcount"] == 0){
-                    console.log("ffkf");
-                    totalResult[0]["ttime"] = 0;
-                }
-                
             
-
-
             for(let r = 0; r<reviewResult.length; r++){
-                reviewList.push(reviewResult[r].scheIdx);//스케쥴인덱스를 넣어준다.
-                
+                reviewList.push(reviewResult[r].scheIdx);
+                // 유저의 활동 중에서 state!
             }
             activityResult.filter((value, pos) => {
-                if(value.state == 1){
+                if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
+                    value.rState = 1;
                     
-                    if(reviewList.includes(value.idx)){//만약 스케듈에 대한 리뷰가 있으면
-                        value.rState = 1;
-                        
-                    }else{//없으면
-                        value.rState = 0;
-                    }
+                }else{//없으면
+                    value.rState = 0;
                 }
-            });
-            for(let c = 0; c<activityResult.length; c++){
-                if(activityResult[c].rState == 1){
-                    activityResult[c].rIdx = dicReview[activityResult[c].idx];
-
+                
+            for(let k  = 0; k< activityResult.length ; k++){
+                
+                if(activityResult[k]["schState"] == 3 || activityResult[k]["schState"] == 2 || activityResult[k]["schState"] == 4){
+                    activityResult[k]["state"] = activityResult[k]["schState"];
+                    
+                    
+                }else{
+                    activityResult[k]["state"] = activityResult[k]["Astate"];
                 }
             }
-
-
             
-            if(!activityResult || !totalResult ||!reviewResult || !timeResult || !stateResult){
+            
+            
+            });
+            if(!activityResult && !totalResult && !reviewResult && !timeResult && !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
                 });
             }else{
                 res.status(200).send({
                     message:"success to show activity",
-                    total : totalResult,
+                    total : totalResult[0],
                     data : activityResult
                 });
             }
@@ -274,7 +343,7 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
     var rImage = req.files;
     var star = req.body.star;
     console.log(req.body);
-    if(!token||!rIdx||!content){
+    if(!token&&!rIdx&&!content){
         res.status(400).send({
             message:"Null value"
         });
