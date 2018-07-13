@@ -269,7 +269,7 @@ router.get('/', async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate
+            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate, currentPerson,person,personLimit
             FROM(SELECT userIdx, state, schState, scheIdx
                         FROM (SELECT userIdx,state, scheIdx FROM activity) AS activity
                         LEFT JOIN(SELECT idx, state AS schState FROM schedule ) AS schedule
