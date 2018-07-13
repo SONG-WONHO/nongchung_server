@@ -35,7 +35,8 @@ router.get('/', async (req, res, next) => {
                     farm.addr AS farmAddr,
                     farmer.fname AS farmerName,
                     farmer.fphone AS farmerPhone,
-                    farmer.comment AS farmerComment
+                    farmer.comment AS farmerComment,
+                    farmer.img AS farmerImg
                 FROM (
                     SELECT * FROM farm 
                     INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
@@ -105,7 +106,9 @@ router.get('/', async (req, res, next) => {
                         farm.addr AS farmAddr,
                         farmer.fname AS farmerName,
                         farmer.fphone AS farmerPhone,
-                        farmer.comment AS farmerComment
+                        farmer.comment AS farmerComment,
+                        farmer.img AS farmerImg
+                FROM (
                     FROM (
                         SELECT * FROM farm 
                         INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
