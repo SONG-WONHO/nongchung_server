@@ -222,21 +222,21 @@ router.get('/myreview', async (req,res)=>{
         }else{
 
             
-            let reviewQuery = `SELECT content, star, img, farmImg, name, period,date_format(startDate, "%Y-%m-%d") AS startDate
+            let reviewQuery = `SELECT content, star, img, farmImg, name, period,date_format(startDate, "%Y-%m-%d") AS startDate, nhName
             FROM (SELECT content, star,userIdx, img, review.scheIdx  FROM review) AS review
             LEFT JOIN(
-            SELECT schedule.idx AS scheIdx, farmImg, name, period, startDate
+            SELECT schedule.idx AS scheIdx, farmImg,nhName ,name, period, startDate
             FROM (SELECT idx,nhIdx,startDate FROM schedule) AS schedule
             LEFT JOIN(
-            SELECT nhIdx,farm_img.farmIdx,farmImg, name, period
+            SELECT nhIdx,farm_img.farmIdx,farmImg,nhName, name, period
             FROM (SELECT img AS farmImg ,farmIdx FROM farm_img) AS farm_img
-            LEFT JOIN(SELECT farm.idx AS farmIdx, farm.name, nh.period, nh.idx AS nhIdx
+            LEFT JOIN(SELECT farm.idx AS farmIdx, farm.name,nhName , nh.period, nh.idx AS nhIdx
                     FROM (SELECT name, idx  FROM farm) AS farm	
-                                LEFT JOIN(SELECT idx,farmIdx,period FROM nh group by farmIdx) AS nh ON farm.idx = nh.farmIdx) AS farm
+                                LEFT JOIN(SELECT idx,farmIdx,period, name AS nhName FROM nh group by farmIdx) AS nh ON farm.idx = nh.farmIdx) AS farm
                                             ON farm_img.farmIdx = farm.farmIdx GROUP BY nhIdx) AS farm
             ON schedule.nhIdx = farm.nhIdx) AS farm
             ON farm.scheIdx = review.scheIdx
-            WHERE userIdx = ?`;
+            WHERE userIdx = `;
             
             
             /*`SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%m-%d") AS startDate, r.img
