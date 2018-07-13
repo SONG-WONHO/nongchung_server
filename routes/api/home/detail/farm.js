@@ -108,7 +108,6 @@ router.get('/', async (req, res, next) => {
                         farmer.fphone AS farmerPhone,
                         farmer.comment AS farmerComment,
                         farmer.img AS farmerImg
-                FROM (
                     FROM (
                         SELECT * FROM farm 
                         INNER JOIN (SELECT farmIdx, img AS farmImg FROM farm_img group by farmIdx) AS farm_img 
@@ -177,7 +176,7 @@ router.get('/', async (req, res, next) => {
 
                 res.status(200).send({
                     message:"Success To Show Farmer Profile",
-                    farmerInfo : farmResult[0],
+                    farmerInfo : farmResult,
                     nhInfo : nhInfoResult
                 })
             }
