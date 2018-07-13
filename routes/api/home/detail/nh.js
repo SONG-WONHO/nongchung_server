@@ -140,7 +140,8 @@ router.get('/', async (req, res, next) => {
                         nh.period,
                         farmer.fname, 
                         farmer.comment, 
-                        farmer.img 
+                        farmer.img,
+                        nh.farmIdx 
                     FROM nh, farm, farmer 
                     WHERE nh.farmIdx = farm.idx 
                     AND farm.farmerIdx = farmer.idx 
@@ -173,7 +174,8 @@ router.get('/', async (req, res, next) => {
                 let farmerInfo = {
                     "name": selectResult[0].fname,
                     "comment":selectResult[0].comment,
-                    "img":selectResult[0].img
+                    "img":selectResult[0].img,
+                    "farmIdx": selectResult[0].farmIdx
                 };
 
                 //농활 스케쥴 뽑는 쿼리
