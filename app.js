@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const helmet = require('helmet');
 
 //매일매일 실행할 작업
 const scheduler = require('./module/schdule');
@@ -21,7 +22,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 //middleware - logger
-app.use(logger('dev'));
+app.use(logger('tiny'));
 //middleware - body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -31,6 +32,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 //cors
 app.use(cors());
+//헬멧모듈
+app.use(helmet());
 
 app.use('/', indexRouter);
 
