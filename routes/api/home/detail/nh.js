@@ -167,7 +167,8 @@ router.get('/', async (req, res, next) => {
                 };
 
                 //농활 스케쥴 뽑는 쿼리
-                selectQuery = `SELECT time, activity FROM nh_sche WHERE nhIdx = ?;`;
+                selectQuery = `SELECT date_format(time, "%H:%i") AS time
+                , activity FROM nh_sche WHERE nhIdx = ?;`;
                 //농활 스케쥴 결과
                 selectResult = await db.queryParamArr(selectQuery,[nhIdx]);
 
@@ -405,7 +406,7 @@ router.get('/', async (req, res, next) => {
                         "img":selectResult[0].img
                     };
 
-                    selectQuery = `SELECT time, activity FROM nh_sche WHERE nhIdx = ?;`;
+                    selectQuery = `SELECT date_format(time, "%H:%i") AS time, activity FROM nh_sche WHERE nhIdx = ?;`;
                     selectResult = await db.queryParamArr(selectQuery,[nhIdx]);
 
                     if(!selectResult){

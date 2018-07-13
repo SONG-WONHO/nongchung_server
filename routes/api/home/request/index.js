@@ -64,7 +64,7 @@ router.post('/', async (req, res, next) => {
                         })
                     } else { //1) 유저가 시간대 중복으로 신청했는가?
                         /*토큰으로 들어온 유저가 신청중인 스케쥴을 확인하고,
-                          해당 스케쥴이 그 유저가 이미 신청중인 스케쥴에 중복된다면 중복!
+                        해당 스케쥴이 그 유저가 이미 신청중인 스케쥴에 중복된다면 중복!
                         */
                         selectQuery =
                             `SELECT * 
@@ -118,6 +118,16 @@ router.post('/', async (req, res, next) => {
 
                                     let updateQuery = `UPDATE schedule SET person = person + 1 WHERE idx = ?`;
                                     let updateResult = await db.queryParamArr(updateQuery, [schIdx]);
+
+                                    let stateQuery = `UPDATE schedule SET state = 
+                                    CASE
+                                    WHEN 
+                                        person >= (SELECT personLimit FROM nh WHERE idx = ?)
+                                        THEN 1
+                                        ELSE 0
+                                        END
+                                    WHERE idx = ?`;
+                                    let stateResult = await db.queryParamArr(stateQuery, [nhIdx,schIdx]);
 
                                     //업데이트 쿼리 수행 중 에러가 있다면?
                                     if (!updateResult){

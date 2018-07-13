@@ -220,19 +220,46 @@ router.get('/myreview', async (req,res)=>{
                 message:"token error"
             });
         }else{
-            let reviewQuery = `SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%m-%d") AS startDate, r.img
+
+            
+            let reviewQuery = `SELECT content, star, img, farmImg, name, period,date_format(startDate, "%Y-%m-%d") AS startDate, nhName
+            FROM (SELECT content, star,userIdx, img, review.scheIdx  FROM review) AS review
+            LEFT JOIN(
+            SELECT schedule.idx AS scheIdx, farmImg,nhName ,name, period, startDate
+            FROM (SELECT idx,nhIdx,startDate FROM schedule) AS schedule
+            LEFT JOIN(
+            SELECT nhIdx,farm_img.farmIdx,farmImg,nhName, name, period
+            FROM (SELECT img AS farmImg ,farmIdx FROM farm_img) AS farm_img
+            LEFT JOIN(SELECT farm.idx AS farmIdx, farm.name,nhName , nh.period, nh.idx AS nhIdx
+                    FROM (SELECT name, idx  FROM farm) AS farm	
+                                LEFT JOIN(SELECT idx,farmIdx,period, name AS nhName FROM nh group by farmIdx) AS nh ON farm.idx = nh.farmIdx) AS farm
+                                            ON farm_img.farmIdx = farm.farmIdx GROUP BY nhIdx) AS farm
+            ON schedule.nhIdx = farm.nhIdx) AS farm
+            ON farm.scheIdx = review.scheIdx
+            WHERE userIdx =?`;
+            
+            
+            /*`SELECT u.img, n.name , r.content, r.star,date_format(s.startDate, "%Y-%m-%d") AS startDate, r.img
             FROM NONGHWAL.review AS r, NONGHWAL.user AS u, NONGHWAL.schedule AS s ,NONGHWAL.nh AS n
-            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND n.idx = s.nhIdx AND u.idx = ? GROUP BY r.idx`;
+            WHERE r.scheIdx = s.idx AND u.idx = r.userIdx AND n.idx = s.nhIdx AND u.idx = ? GROUP BY r.idx`;*/
             let reviewResult = await db.queryParamArr(reviewQuery,[decoded.user_idx]);
             for(let a = 0; a<reviewResult.length;a++){
                 var b = reviewResult[a].img;
                 var c = reviewResult[a].startDate;
+                if(b != null){
                 reviewResult[a].img = b.split(",");
+                console.log(c);
+                
                 var aaa= c.split("-");
                 var date = aaa[0]+"년 "+aaa[1]+"월 "+aaa[2]+"일";
                 reviewResult[a].startDate =date;
                 if(reviewResult[a].img == ""){//null값이 들어오면 그냥 아예 빈 배열로 처리 해준다.
                     reviewResult[a].img = [];
+                    }
+                }else{
+                    if(reviewResult[a].img == ""){//null값이 들어오면 그냥 아예 빈 배열로 처리 해준다.
+                        reviewResult[a].img = [];
+                        }
                 }
             }
             
