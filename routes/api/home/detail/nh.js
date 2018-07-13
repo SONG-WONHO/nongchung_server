@@ -55,6 +55,7 @@ router.get('/', async (req, res, next) => {
                         schedule.idx, 
                         state,
                         date_format(startDate, "%Y-%m-%d") as startDate,
+                        date_format(endDate, "%Y-%m-%d") as endDate,
                         (personLimit - person) AS availPerson
                     FROM schedule, nh
                     WHERE nhIdx = ? 
@@ -188,6 +189,7 @@ router.get('/', async (req, res, next) => {
                     "farmerInfo":farmerInfo,
                     "schedule":selectResult,
                     "nearestStartDate":selectScheduleResult[0].startDate,
+                    "nearestEndDate":selectScheduleResult[0].endDate,
                     "allStartDate":selectScheduleResult
                 })
             }
@@ -252,6 +254,7 @@ router.get('/', async (req, res, next) => {
                             nh.period,
                             schedule.idx, 
                             date_format(startDate, "%Y-%m-%d") as startDate,
+                            date_format(endDate, "%Y-%m-%d") as endDate,
                             state,
                             (personLimit - person) AS availPerson
                         FROM schedule, nh 
@@ -423,6 +426,7 @@ router.get('/', async (req, res, next) => {
                         "farmerInfo":farmerInfo,
                         "schedule":selectResult,
                         "nearestStartDate":selectScheduleResult[0].startDate,
+                        "nearestEndDate":selectScheduleResult[0].endDate,
                         "allStartDate":selectScheduleResult,
                         "myScheduleActivities":checkMineNhResult
                     });
