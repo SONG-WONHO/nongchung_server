@@ -47,27 +47,13 @@ WHERE nh.idx = ?) AS img
 											FROM NONGHWAL.farm, NONGHWAL.nh,NONGHWAL.farmer 
 											WHERE farm.farmerIdx = farmer.idx AND farm.idx = nh.farmIdx AND nh.idx = ?)
                                             `;
-            
-            let imgQuery = `SELECT SUBSTRING_INDEX(GROUP_CONCAT(farm_img.img SEPARATOR '|'),"|",1) AS farmImg, farm.idx AS farmIdx FROM NONGHWAL.farm, NONGHWAL.farm_img
-            WHERE farm.idx = farm_img.farmIdx AND farm.farmerIdx = ?
-            group by farm.idx `;
-            
+        
             
 
             let nhInfoResult = await db.queryParamArr(nhInfoQuery1,[nhIdx,nhIdx]);
-            let imgResult = await db.queryParamArr(imgQuery,[farmerIdx]);
-            // console.log(nhInfoResult[0]["farmIdx"]);
-            console.log(imgResult);
 
 
-            /*
-            for(let a = 0; a <nhInfoResult.length; a++){
-                if(nhInfoResult[a]["farmIdx"] == imgResult[a]["farmIdx"]){
-                    nhInfoResult[a].farmImg = imgResult[a]["farmImg"];
-                    }
-                
-            }
-*/
+
             console.log(nhInfoResult);
             if(!nhInfoResult || !imgResult || !farmResult ){
                 res.status(500).send({
