@@ -69,16 +69,18 @@ router.post('/', async (req, res, next) => {
 
                 //프론트한테 보내줄 결과 만들기
                 let result = {
-                    mail: checkResult.mail,
-                    name: checkResult.name,
-                    birth: checkResult.birth,
-                    sex: checkResult.sex,
-                    hp: checkResult.hp,
-                    point: checkResult.point,
-                    img: checkResult.img,
-                    nickname: checkResult.nickname,
-                    age: checkResult.age
+                    mail: checkResult[0].mail,
+                    name: checkResult[0].name,
+                    birth: checkResult[0].birth,
+                    sex: checkResult[0].sex,
+                    hp: checkResult[0].hp,
+                    point: checkResult[0].point,
+                    img: checkResult[0].img,
+                    nickname: checkResult[0].nickname,
+                    age: checkResult[0].age
                 };
+
+                console.log(result);
 
                 res.status(200).send({
                     message : "Success To Sign In",

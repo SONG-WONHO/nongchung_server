@@ -37,7 +37,7 @@ router.post('/', async (req, res, next) => {
             //인덱스 받기
             let nhIdx = req.body.nhIdx;
             let schIdx = req.body.schIdx;
-            let personNum = req.body.personNum || 0;
+            let personNum = req.body.personNum || 1;
 
             if(check.checkNull([nhIdx, schIdx])) {
                 res.status(400).send({
