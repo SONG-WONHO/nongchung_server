@@ -246,14 +246,20 @@ router.get('/myreview', async (req,res)=>{
             for(let a = 0; a<reviewResult.length;a++){
                 var b = reviewResult[a].img;
                 var c = reviewResult[a].startDate;
+                if(b != null){
                 reviewResult[a].img = b.split(",");
-                console.log(c)
+                console.log(c);
                 
                 var aaa= c.split("-");
                 var date = aaa[0]+"년 "+aaa[1]+"월 "+aaa[2]+"일";
                 reviewResult[a].startDate =date;
                 if(reviewResult[a].img == ""){//null값이 들어오면 그냥 아예 빈 배열로 처리 해준다.
                     reviewResult[a].img = [];
+                    }
+                }else{
+                    if(reviewResult[a].img == ""){//null값이 들어오면 그냥 아예 빈 배열로 처리 해준다.
+                        reviewResult[a].img = [];
+                        }
                 }
             }
             

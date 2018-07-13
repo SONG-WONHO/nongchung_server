@@ -221,7 +221,7 @@ router.get('/', async (req,res)=>{
             console.log(dicReview);
             console.log(Object.keys(dicReview));
             for(let a = 0 ; a< totalResult.lenght; a++){
-                if(totalResult[a][ttime] == NULL || totalResult[a][ttime] == [] || totalResult[a][ttime] == {}){
+                if(totalResult[a][ttime] == NULL && totalResult[a][ttime] == [] && totalResult[a][ttime] == {}){
                     console.log("ffkf");
                     totalResult[a][ttime] = 0;
                 }
