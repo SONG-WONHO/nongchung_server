@@ -220,6 +220,13 @@ router.get('/', async (req,res)=>{
             }
             console.log(dicReview);
             console.log(Object.keys(dicReview));
+            for(let a = 0 ; a< totalResult.lenght; a++){
+                if(totalResult[a][ttime] == NULL){
+                    console.log("ffkf");
+                    totalResult[a][ttime] = 0;
+                }
+                
+            }
 
 
             for(let r = 0; r<reviewResult.length; r++){
