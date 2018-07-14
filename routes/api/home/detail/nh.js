@@ -295,7 +295,7 @@ router.get('/', async (req, res, next) => {
                             nickname, 
                             img 
                         FROM user 
-                        JOIN (SELECT userIdx FROM activity WHERE scheIdx = ? AND state = 0) AS activity 
+                        JOIN (SELECT userIdx FROM activity WHERE scheIdx = ? AND state = 1) AS activity 
                         ON activity.userIdx = user.idx;`;
 
                     //대원결과
