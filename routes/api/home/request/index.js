@@ -73,7 +73,7 @@ router.post('/', async (req, res, next) => {
                         selectQuery =
                             `SELECT * 
                             FROM schedule 
-                            JOIN (SELECT scheIdx FROM NONGHWAL.activity WHERE activity.state = 0 AND userIdx = ?) as D 
+                            JOIN (SELECT scheIdx FROM NONGHWAL.activity WHERE userIdx = ?) as D 
                             WHERE schedule.idx = D.scheIdx 
                             AND ((startDate >= ? AND startDate <= ?) 
                             OR (? >= startDate AND ? <= endDate));`;
