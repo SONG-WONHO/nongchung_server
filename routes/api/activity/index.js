@@ -310,6 +310,11 @@ router.get('/', async (req,res)=>{
                     value.rState = 0;
                 }
                 
+            
+            
+            
+            
+            });
             for(let k  = 0; k< activityResult.length ; k++){
                 
                 if(activityResult[k]["schState"] == 3 || activityResult[k]["schState"] == 2 || activityResult[k]["schState"] == 4){
@@ -320,10 +325,10 @@ router.get('/', async (req,res)=>{
                     activityResult[k]["state"] = activityResult[k]["Astate"];
                 }
             }
-            
-            
-            
-            });
+
+            if(totalResult[0]["tcount"]==0){
+                totalResult[0]["ttime"] = 0
+            }
             if(!activityResult && !totalResult && !reviewResult && !timeResult && !stateResult){
                 res.status(500).send({
                     message:"Internal server error"
