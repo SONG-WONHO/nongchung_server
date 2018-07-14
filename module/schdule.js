@@ -2,7 +2,7 @@ const schedule = require('node-schedule');
 const db = require('./db');
 
 //반복주기 => 매일 아침 6시
-const scheduler = schedule.scheduleJob('*/1 * * * * *', async ()=>{
+const scheduler = schedule.scheduleJob('*/3 * * * * *', async ()=>{
 
     console.log(1);
     //실행될 작업
@@ -139,6 +139,7 @@ const scheduler = schedule.scheduleJob('*/1 * * * * *', async ()=>{
     await db.queryParamNone(new_query3);
     await db.queryParamNone(new_query4);
 
+    console.log(2);
 });
 
 module.exports = scheduler;
