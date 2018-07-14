@@ -113,14 +113,14 @@ router.get('/complete',async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate, currentPerson,person,personLimit
+            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,nhidx ,idx, img,schState, state AS Astate, currentPerson,person,personLimit
             FROM(SELECT userIdx, state, schState, scheIdx
                         FROM (SELECT userIdx,state, scheIdx FROM activity) AS activity
-                        LEFT JOIN(SELECT idx, state AS schState  FROM schedule ) AS schedule
+                        LEFT JOIN(SELECT idx, state AS schState FROM schedule ) AS schedule
                         ON schedule.idx = activity.scheIdx WHERE userIdx= ?) AS Stable
                         LEFT JOIN(
             SELECT  s.idx, date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
-                        f.addr, n.period, n.name, n.price,
+                        f.addr, n.period, n.name, n.price,n.idx AS nhidx,
                         abs(n.personLimit - s.person) as currentPerson,
                         s.person, n.personLimit, i.img
                         FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
@@ -269,14 +269,14 @@ router.get('/', async (req,res)=>{
             
 
             
-            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,idx,img,schState, state AS Astate, currentPerson,person,personLimit
+            let activityQuery = `SELECT startDate, endDate, addr, period, name, price,personLimit,nhidx ,idx, img,schState, state AS Astate, currentPerson,person,personLimit
             FROM(SELECT userIdx, state, schState, scheIdx
                         FROM (SELECT userIdx,state, scheIdx FROM activity) AS activity
                         LEFT JOIN(SELECT idx, state AS schState FROM schedule ) AS schedule
                         ON schedule.idx = activity.scheIdx WHERE userIdx= ?) AS Stable
                         LEFT JOIN(
             SELECT  s.idx, date_format(s.startDate, "%Y.%c.%d") AS startDate,date_format(s.endDate, "%Y.%c.%d") AS endDate , 
-                        f.addr, n.period, n.name, n.price,
+                        f.addr, n.period, n.name, n.price,n.idx AS nhidx,
                         abs(n.personLimit - s.person) as currentPerson,
                         s.person, n.personLimit, i.img
                         FROM NONGHWAL.activity AS a, NONGHWAL.farm AS f, NONGHWAL.farm_img AS i,NONGHWAL.schedule AS s, NONGHWAL.nh AS n, NONGHWAL.user AS u
