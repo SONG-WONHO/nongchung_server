@@ -8,7 +8,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 
 //매일매일 실행할 작업
-const scheduler = require('./module/schdule');
+// const scheduler = require('./module/schdule');
 
 //광고 주기적으로 전송
 // const schedulerAd = require('./module/scheduleAd');
@@ -22,7 +22,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 //middleware - logger
-app.use(logger('tiny'));
+app.use(logger('dev'));
 //middleware - body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
