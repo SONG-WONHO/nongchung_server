@@ -20,7 +20,6 @@
     "http-errors": "~1.6.2",
     "jsonwebtoken": "^8.3.0",
     "moment": "^2.22.2",
-    "mongoose": "^5.2.3",
     "morgan": "~1.9.0",
     "multer": "^1.3.1",
     "multer-s3": "^2.7.0",

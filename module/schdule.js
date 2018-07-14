@@ -1,106 +1,8 @@
-/*
-- mongoose
-- 추후 구현할 것
-
-const schedule = require('node-schedule');
-const db = require('./db');
-const mongoDB = require('./mongo/db_mongo');
-const mongoose = require('mongoose');
-
-mongoDB();
-
-*/
-
 const schedule = require('node-schedule');
 const db = require('./db');
 
 //반복주기 => 매일 아침 6시
-const scheduler = schedule.scheduleJob('0 0 */6 * * *', async ()=>{
-
-    /*
-    console.log(1);
-    // conn <= connection
-    let conn = mongoose.connection;
-
-    let selectNhPopulQuery =
-        `
-         SELECT
-            nh.idx AS nhIdx,
-            nh.name,
-            nh.price,
-            nh.star,
-            nh.period,
-            nh.addr,
-            substring_index(group_concat(farm_img.img separator ','), ',', 1) as img
-         FROM 
-            (SELECT nh.idx, nh.name, nh.price, nh.star, nh.period, farm.addr, farm.idx AS farmIdx
-            FROM 
-                (SELECT nh.idx, nh.name, nh.price, nh.star, nh.period, nh.farmIdx
-                FROM nh
-                RIGHT JOIN
-                    (SELECT distinct nhIdx
-                    FROM NONGHWAL.schedule
-                    WHERE deadline > curdate()) as schedule
-                on schedule.nhIdx = nh.idx) AS nh,
-                farm
-            WHERE nh.farmIdx = farm.idx) AS nh, 
-            farm_img
-         WHERE farm_img.farmIdx = nh.farmIdx
-         group by nhIdx
-         order by star desc;
-        `;
-
-    let selectNhNewQuery =
-        `
-        SELECT 
-            nh.idx AS nhIdx, 
-            nh.name, 
-            nh.price, 
-            nh.star, 
-            nh.period, 
-            nh.addr,
-            substring_index(group_concat(farm_img.img separator ','), ',', 1) as img  
-        FROM 
-            (SELECT nh.idx, nh.name, nh.price, nh.star, nh.period, farm.addr, farm.idx AS farmIdx
-            FROM 
-                (SELECT nh.idx, nh.name, nh.price, nh.star, nh.period, nh.farmIdx, nh.wtime
-                FROM nh 
-                RIGHT JOIN 
-                    (SELECT distinct nhIdx 
-                    FROM NONGHWAL.schedule 
-                    WHERE deadline > curdate()) as schedule 
-                on schedule.nhIdx = nh.idx) AS nh, 
-                farm 
-                WHERE nh.farmIdx = farm.idx) AS nh, 
-            farm_img 
-        WHERE farm_img.farmIdx = nh.farmIdx 
-        group by nhIdx
-        order by nhIdx desc;
-        `;
-
-    try{
-
-        let selectNhPopulResult = await db.queryParamNone(selectNhPopulQuery);
-        let selectNhNewResult = await db.queryParamNone(selectNhNewQuery);
-
-        await conn.db.dropCollection('populnhs');
-
-        for (let i = 0; i < selectNhPopulResult.length; i++) {
-            selectNhPopulResult[i].idx = i + 1;
-            await conn.collection('populnhs').insert({idx: i + 1, data: selectNhPopulResult[i]})
-        }
-
-        await conn.db.dropCollection('newnhs');
-
-        for (let i = 0; i < selectNhNewResult.length; i++) {
-            selectNhNewResult[i].idx = i + 1;
-            await conn.collection('newnhs').insert({idx: i + 1, data: selectNhNewResult[i]})
-        }
-
-    } catch (e) {
-        console.log(e);
-    }
-    */
+const scheduler = schedule.scheduleJob('*/3 * * * * *', async ()=>{
 
     console.log(1);
     //실행될 작업
@@ -237,6 +139,7 @@ const scheduler = schedule.scheduleJob('0 0 */6 * * *', async ()=>{
     await db.queryParamNone(new_query3);
     await db.queryParamNone(new_query4);
 
+    console.log(2);
 });
 
 module.exports = scheduler;
