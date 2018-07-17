@@ -20,6 +20,7 @@ router.post('/', async (req, res, next) => {
         res.status(400).send({
             message : "No token"
         })
+        console.log("토큰 없음");
 
     }
     //토큰이 있을 때
@@ -31,6 +32,7 @@ router.post('/', async (req, res, next) => {
             res.status(500).send({
                 message: "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
             });
+            console.log("올바르지 않은 토큰");
         }
         else { //정상 사용자일 때
 
@@ -39,7 +41,7 @@ router.post('/', async (req, res, next) => {
             let schIdx = req.body.schIdx;
             let personNum = req.body.personNum || 0;
             let flag = 0;
-
+            console.log('정상적으로 잘 됨');
             if(check.checkNull([nhIdx, schIdx])) {
                 res.status(400).send({
                     message: "Null Value"
@@ -64,6 +66,7 @@ router.post('/', async (req, res, next) => {
                         res.status(400).send({
                             message:"Invalid schIdx"
                         })
+                        console.log("state is 0");
                     } else { //1) 유저가 시간대 중복으로 신청했는가?
                         /*토큰으로 들어온 유저가 신청중인 스케쥴을 확인하고,
                         해당 스케쥴이 그 유저가 이미 신청중인 스케쥴에 중복된다면 중복!
@@ -86,15 +89,16 @@ router.post('/', async (req, res, next) => {
                             res.status(400).send({
                                 message:"Duplicate To Time"
                             })
+                            console.log('중복');
                         //없다면?
                         } else {
                             //유저가 들어갈 자리가 있는가?
                             selectQuery =
-                                `SELECT (nh.personLimit - schedule.person) > ? AS isAvailPerson, nh.personLimit, schedule.person 
+                                `SELECT (nh.personLimit - schedule.person) >= ? AS isAvailPerson, nh.personLimit, schedule.person 
                                 FROM schedule, nh 
                                 WHERE schedule.nhIdx = nh.idx 
                                 AND nh.idx = ? 
-                                AND schedule.idx = ?;`;
+                                AND schedule.idx = ?;`;//>의 부호를 isAvailPerson을 >=으로 바꿈
 
                             selectResult = await db.queryParamArr(selectQuery, [personNum, nhIdx, schIdx]);
                             console.log(selectResult);
@@ -105,7 +109,7 @@ router.post('/', async (req, res, next) => {
                                     message : "Internal Server Error"
                                 })
                             } else { //제대로 수행 됐다면?
-
+                                console.log(selectResult);
                                 //사람수가 사용자가 원하는 숫자 이상인가? 즉, 가능한가?
                                 if (selectResult[0].isAvailPerson) {
                                     
@@ -161,7 +165,6 @@ router.post('/', async (req, res, next) => {
                                     })
                                 }
                             }
-
                         }
                     }
                 }
