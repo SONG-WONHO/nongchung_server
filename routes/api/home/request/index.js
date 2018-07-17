@@ -28,6 +28,8 @@ router.post('/', async (req, res, next) => {
         let decoded = jwt.verify(token);
         console.log(decoded.user_idx);
         console.log(decoded);
+        console.log('beforeToken');
+        console.log(req);
         if (decoded === -1) { //올바르지 않은 토큰일 때
             res.status(500).send({
                 message: "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
@@ -35,7 +37,8 @@ router.post('/', async (req, res, next) => {
             console.log("올바르지 않은 토큰");
         }
         else { //정상 사용자일 때
-
+            console.log(req);
+            console.log('afterToken');
             //인덱스 받기
             let nhIdx = req.body.nhIdx;
             let schIdx = req.body.schIdx;
