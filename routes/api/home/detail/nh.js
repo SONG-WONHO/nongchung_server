@@ -319,8 +319,8 @@ router.get('/', async (req, res, next) => {
                         ON schedule.idx = activity.scheIdx
                         WHERE nhIdx = ?
                         AND userIdx = ?
-                        AND schedule.state = 0
-                        AND activity.state = 0;
+                        AND (schedule.state = 0 OR schedule.state= 1)
+                        AND (activity.state = 1 OR activity.state = 0);
                         `;
 
                     let checkMineResult = await db.queryParamArr(checkMineNhQuery, [nhIdx, userIdx]);

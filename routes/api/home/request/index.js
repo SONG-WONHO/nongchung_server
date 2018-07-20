@@ -9,6 +9,11 @@ const userRouter = require('./user');
 router.use('/schedule', scheduleRouter);
 router.use('/user',userRouter);
 
+//널벨류나 노 토큰 411  No token   Null Value
+//정당하지 않은 값 412  Invalid schIdx   Invalid nhIdx and schIdx
+//중복 413 Duplicate To Time
+//Fail To Request For Application, No Available Person Number, 415
+
 //신청하기
 router.post('/', async (req, res, next) => {
 
@@ -17,7 +22,7 @@ router.post('/', async (req, res, next) => {
 
     //토큰이 없을 때
     if(!token){
-        res.status(400).send({
+        res.status(411).send({
             message : "No token"
         })
         console.log("토큰 없음");
@@ -46,7 +51,7 @@ router.post('/', async (req, res, next) => {
             let flag = 0;
             console.log('정상적으로 잘 됨');
             if(check.checkNull([nhIdx, schIdx])) {
-                res.status(400).send({
+                res.status(411).send({
                     message: "Null Value"
                 })
             } else {
@@ -59,14 +64,14 @@ router.post('/', async (req, res, next) => {
 
                 //정당하지 않은 농활, 스케쥴 인덱스일 때
                 if (selectResult.length === 0){
-                    res.status(400).send({
+                    res.status(412).send({
                         message: "Invalid nhIdx and schIdx"
                     })
                 } else { //정당한 농활, 스케쥴 인덱스일 때
 
                     //1) status 확인 후 신청가능한 지 판단
                     if(selectResult[0]['state'] !== 0) {
-                        res.status(400).send({
+                        res.status(412).send({
                             message:"Invalid schIdx"
                         })
                         console.log("state is 0");
@@ -80,16 +85,18 @@ router.post('/', async (req, res, next) => {
                             `SELECT * 
                             FROM schedule 
                             JOIN (SELECT scheIdx FROM NONGHWAL.activity WHERE userIdx = ?) as D 
-                            WHERE schedule.idx = D.scheIdx 
+                            WHERE schedule.idx = D.scheIdx
+                            AND (state = ? OR state = ? OR state= ? OR state = ?)
                             AND ((startDate >= ? AND startDate <= ?) 
-                            OR (? >= startDate AND ? <= endDate));`;
+                            OR (? >= startDate AND ? <= endDate))
+                            ;`;
 
-                        selectResult = await db.queryParamArr(selectQuery, [decoded.user_idx, selectResult[0]['startDate'], selectResult[0]['endDate'], selectResult[0]['startDate'], selectResult[0]['startDate']]);
+                        selectResult = await db.queryParamArr(selectQuery, [decoded.user_idx,0,1,2,4,selectResult[0]['startDate'], selectResult[0]['endDate'], selectResult[0]['startDate'], selectResult[0]['startDate']]);
                         console.log(selectResult);
 
                         //있다면 중복!
                         if (selectResult.length >= 1) {
-                            res.status(400).send({
+                            res.status(413).send({
                                 message:"Duplicate To Time"
                             })
                             console.log('중복');
@@ -116,7 +123,7 @@ router.post('/', async (req, res, next) => {
                                 //사람수가 사용자가 원하는 숫자 이상인가? 즉, 가능한가?
                                 if (selectResult[0].isAvailPerson) {
                                     
-                                    let insertQuery = `INSERT INTO activity (userIdx, scheIdx) VALUES (?, ?);`;
+                                    let insertQuery = `INSERT INTO activity (userIdx, scheIdx) VALUES (?, ?) ;`;
                                     let insertResult = await db.queryParamArr(insertQuery, [decoded.user_idx, schIdx]);
                                     //쿼리 수행 중 에러가 있다면?
                                     if (!insertResult){
@@ -149,7 +156,7 @@ router.post('/', async (req, res, next) => {
                                     let stateResult = await db.queryParamArr(stateQuery, [nhIdx,schIdx]);
 
                                     //업데이트 쿼리 수행 중 에러가 있다면?
-                                        if (!updateResult && !stateQuery && !countResult){
+                                        if (!updateResult && !stateResult && !countResult){
                                             res.status(500).send({
                                                 message : "Internal Server Error"
                                                 });
@@ -163,7 +170,7 @@ router.post('/', async (req, res, next) => {
                                         })
                                     
                                 } else {
-                                    res.status(400).send({
+                                    res.status(415).send({
                                         message:"Fail To Request For Application, No Available Person Number"
                                     })
                                 }
