@@ -20,6 +20,9 @@ const mypageRouter = require('./mypage/index');
 //REVIEW
 const reviewRouter = require('./review/index');
 
+//FARMER
+const farmerRouter = require('./user_farmer/index');
+
 router.use('/signin', signinRouter);
 router.use('/signup', signupRouter);
 router.use('/dup-email', dupEmailRouter);
@@ -34,5 +37,7 @@ router.use('/activity', activityRouter);
 router.use('/mypage', mypageRouter);
 
 router.use('/review', reviewRouter);
+
+router.use('/farmer', farmerRouter);
 
 module.exports = router;
