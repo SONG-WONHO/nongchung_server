@@ -133,7 +133,8 @@ router.get('/', async (req, res, next) => {
                 (SELECT farm.idx AS farmIdx, addr, addrIdx, img 
                 FROM farm 
                 LEFT JOIN (select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm 
-            ON nh.farmIdx = farm.farmIdx;
+            ON nh.farmIdx = farm.farmIdx
+            order by star DESC;
             `;
 
         //쿼리 결과 모든 농활 정보
@@ -180,7 +181,8 @@ router.get('/', async (req, res, next) => {
                     (SELECT farm.idx AS farmIdx, addr, addrIdx, img 
                     FROM farm 
                     LEFT JOIN (select * from farm_img group by farmIdx) AS farm_img ON farm.idx = farm_img.farmIdx) AS farm 
-                ON nh.farmIdx = farm.farmIdx;
+                ON nh.farmIdx = farm.farmIdx
+                order by star DESC;
                 `;
 
             //쿼리 결과 모든 농활 정보
