@@ -35,6 +35,13 @@ app.use(cors());
 //헬멧모듈
 app.use(helmet());
 
+app.use((req, res, next) => {
+  console.log("query", req.query);
+  console.log("body", req.body);
+  console.log("params", req.params);
+  next()
+});
+
 app.use('/', indexRouter);
 
 //catch 404 and forward to error handler
