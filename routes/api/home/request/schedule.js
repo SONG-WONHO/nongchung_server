@@ -16,20 +16,48 @@ router.get('/', async (req, res, next) => {
     //스케쥴 인덱스를 줬을 때
     else {
         //대원뽑기
-        let selectFriendQuery =
-            `SELECT 
-                name, 
-                nickname, 
-                img 
-            FROM user 
-            JOIN (SELECT userIdx FROM activity WHERE scheIdx = ? AND state = 0) AS d 
-            ON d.userIdx = user.idx;`;
+        //스케츌 총 인원  쿼리
+        let selectFriendQuery = `SELECT nh.personLimit, idx AS nhIdx
+        FROM nh 
+        JOIN (SELECT schedule.nhIdx  FROM schedule WHERE schedule.idx = ?) AS schedule 
+        ON schedule.nhIdx = nh.idx
+        `;
+
+        // 성비 쿼리 & 참여인원 쿼리
+        let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
+        JOIN(SELECT idx, sex FROM user) AS user
+        ON(userIdx = user.idx)
+        WHERE scheIdx = ?
+        group by userIdx;`;
+        
 
         //대원결과
+        //1 스케쥴 총 인원 쿼리 2. 성비 쿼리 3. 참여 인원 쿼리 
         let selectFriendResult = await db.queryParamArr(selectFriendQuery, [schIdx]);
+        let selectSexRatioResult = await db.queryParamArr(selectSexRatioQuery,[schIdx]);
+        
+        
+        //남녀 뽑기                
+        let woman  = 0;
+        let man = 0;
+        for (let i = 0; i < selectSexRatioResult.length; i++){
+            if(selectSexRatioResult[i].sex == 1){
+                man++;
+            }else{
+                woman++;
+            }
+        }
+
+        let Info = {
+            womanCount : woman ,
+            manCount : man ,
+            attendCount : selectSexRatioResult.length,
+            personLimit :  selectFriendResult[0].personLimit
+        };
 
         //쿼리 수행도중 에러가 있을 때
-        if (!selectFriendResult) {
+
+        if (!selectFriendResult && !selectSexRatioResult) {
             res.status(500).send({
                 message : "Internal Server Error"
             });
@@ -38,7 +66,7 @@ router.get('/', async (req, res, next) => {
 
         res.status(200).send({
             message:"Success To Get Data",
-            friendsInfo: selectFriendResult
+            friendsInfo: Info
         })
 
     }

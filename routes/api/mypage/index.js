@@ -159,7 +159,7 @@ router.get('/point',async (req,res)=>{
             AND a.userIdx = u.idx AND u.idx=? AND a.state = 1 GROUP BY i.farmIdx`;
             let infoResult = await db.queryParamArr(infoQuery,[decoded.user_idx])
             
-            if(!pointResult || !infoResult){
+            if(!pointResult && !infoResult){
                 res.status(500).send({
                     message:"Internal server error"
                 })

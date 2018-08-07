@@ -80,19 +80,39 @@ router.get('/', async (req, res, next) => {
                 console.log(selectScheduleResult);
 
                 //대원뽑기
-                let selectFriendQuery =
-                    `
-                    SELECT 
-                        name, 
-                        nickname, 
-                        img 
-                    FROM user 
-                    JOIN (SELECT userIdx FROM activity WHERE scheIdx = ? AND state = 1) AS activity 
-                    ON activity.userIdx = user.idx;
-                    `;
+                //
+
+                //스케츌 총 인원  쿼리
+                let selectFriendQuery = `SELECT nh.personLimit, idx AS nhIdx
+                FROM nh 
+                JOIN (SELECT schedule.nhIdx  FROM schedule WHERE schedule.idx = ?) AS schedule 
+                ON schedule.nhIdx = nh.idx
+                `;
+
+                // 성비 쿼리 & 참여인원 쿼리
+                let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
+                JOIN(SELECT idx, sex FROM user) AS user
+                ON(userIdx = user.idx)
+                WHERE scheIdx = ?
+                group by userIdx;`;
+                
 
                 //대원결과
+                //1 스케쥴 총 인원 쿼리 2. 성비 쿼리 3. 참여 인원 쿼리 
                 let selectFriendResult = await db.queryParamArr(selectFriendQuery, [selectScheduleResult[0].idx]);
+                let selectSexRatioResult = await db.queryParamArr(selectSexRatioQuery,[selectScheduleResult[0].idx]);
+                
+                
+                //남녀 뽑기                
+                let woman  = 0;
+                let man = 0;
+                for (let i = 0; i < selectSexRatioResult.length; i++){
+                    if(selectSexRatioResult[i].sex == 1){
+                        man++;
+                    }else{
+                        woman++;
+                    }
+                }
 
                 //쿼리 수행도중 에러가 있을 때
                 if (!selectFriendResult) {
@@ -158,6 +178,13 @@ router.get('/', async (req, res, next) => {
                     });
                     return;
                 }
+                //참여대원 정보
+                let friendsInfo = {
+                    womanCount : woman ,
+                    manCount : man ,
+                    attendCount : selectSexRatioResult.length,
+                    personLimit :  selectFriendResult[0].personLimit
+                };
 
                 //농활 정보 만들기
                 let nhInfo = {
@@ -200,7 +227,7 @@ router.get('/', async (req, res, next) => {
                     "message":"Success To Get Detail Information",
                     "image":imageInfo,
                     "nhInfo":nhInfo,
-                    "friendsInfo":selectFriendResult,
+                    "friendsInfo":friendsInfo,
                     "farmerInfo":farmerInfo,
                     "schedule":selectResult,
                     "nearestStartDate":selectScheduleResult[0].startDate,
@@ -289,20 +316,50 @@ router.get('/', async (req, res, next) => {
                     }
 
                     //대원뽑기
-                    let selectFriendQuery =
+                    /*let selectFriendQuery =
                         `SELECT 
                             name, 
                             nickname, 
                             img 
                         FROM user 
                         JOIN (SELECT userIdx FROM activity WHERE scheIdx = ? AND state = 1) AS activity 
-                        ON activity.userIdx = user.idx;`;
+                        ON activity.userIdx = user.idx;`;*/
+
+                    //스케츌 총 인원  쿼리
+                    let selectFriendQuery = `SELECT nh.personLimit, idx AS nhIdx
+                    FROM nh 
+                    JOIN (SELECT schedule.nhIdx  FROM schedule WHERE schedule.idx = ?) AS schedule 
+                    ON schedule.nhIdx = nh.idx
+                    `;
+
+                    // 성비 쿼리 & 참여인원 쿼리
+                    let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
+                    JOIN(SELECT idx, sex FROM user) AS user
+                    ON(userIdx = user.idx)
+                    WHERE scheIdx = ?
+                    group by userIdx;`;
+                    
 
                     //대원결과
+                    //1 스케쥴 총 인원 쿼리 2. 성비 쿼리 3. 참여 인원 쿼리 
                     let selectFriendResult = await db.queryParamArr(selectFriendQuery, [selectScheduleResult[0].idx]);
+                    let selectSexRatioResult = await db.queryParamArr(selectSexRatioQuery,[selectScheduleResult[0].idx]);
+                    
+                    
+                    //남녀 뽑기                
+                    let woman  = 0;
+                    let man = 0;
+                    for (let i = 0; i < selectSexRatioResult.length; i++){
+                        if(selectSexRatioResult[i].sex == 1){
+                            man++;
+                        }else{
+                            woman++;
+                        }
+                    }
+                    console.log(selectFriendResult[0].personLimit);
 
                     //쿼리 수행도중 에러가 있을 때
-                    if (!selectFriendResult) {
+                    if (!selectFriendResult && ! selectSexRatioResult) {
                         res.status(500).send({
                             message : "Internal Server Error"
                         });
@@ -407,6 +464,13 @@ router.get('/', async (req, res, next) => {
                         });
                         return;
                     }
+                    //참여대원 정보
+                    let friendsInfo = {
+                        womanCount : woman ,
+                        manCount : man ,
+                        attendCount : selectSexRatioResult.length,
+                        personLimit :  selectFriendResult[0].personLimit
+                    };
 
                     //농활 정보
                     let nhInfo = {
@@ -450,7 +514,7 @@ router.get('/', async (req, res, next) => {
                         "message":"Success To Get Detail Information",
                         "image":imageInfo,
                         "nhInfo":nhInfo,
-                        "friendsInfo":selectFriendResult,
+                        "friendsInfo":friendsInfo,                           
                         "farmerInfo":farmerInfo,
                         "schedule":selectResult,
                         "nearestStartDate":selectScheduleResult[0].startDate,
