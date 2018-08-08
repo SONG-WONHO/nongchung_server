@@ -48,7 +48,7 @@ router.get('/', async (req, res, next) => {
             }
         }
 
-        let Info = {
+        let Info = [{
             womanCount : woman ,
             manCount : man ,
             attendCount : selectSexRatioResult.length,
@@ -56,7 +56,7 @@ router.get('/', async (req, res, next) => {
             name: "temp",
             nickname: "temp",
             img: "temp"
-        };
+        }];
 
         //쿼리 수행도중 에러가 있을 때
 

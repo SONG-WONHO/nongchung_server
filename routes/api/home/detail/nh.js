@@ -179,7 +179,7 @@ router.get('/', async (req, res, next) => {
                     return;
                 }
                 //참여대원 정보
-                let friendsInfo = {
+                let friendsInfo = [{
                     womanCount : woman ,
                     manCount : man ,
                     attendCount : selectSexRatioResult.length,
@@ -187,7 +187,7 @@ router.get('/', async (req, res, next) => {
                     name: "temp",
                     nickname: "temp",
                     img: "temp"
-                };
+                }];
 
                 //농활 정보 만들기
                 let nhInfo = {
@@ -468,7 +468,7 @@ router.get('/', async (req, res, next) => {
                         return;
                     }
                     //참여대원 정보
-                    let friendsInfo = {
+                    let friendsInfo = [{
                         womanCount : woman ,
                         manCount : man ,
                         attendCount : selectSexRatioResult.length,
@@ -476,7 +476,7 @@ router.get('/', async (req, res, next) => {
                         name: "temp",
                         nickname: "temp",
                         img: "temp"
-                    };
+                    }];
 
                     //농활 정보
                     let nhInfo = {
