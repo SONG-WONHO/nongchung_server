@@ -183,7 +183,10 @@ router.get('/', async (req, res, next) => {
                     womanCount : woman ,
                     manCount : man ,
                     attendCount : selectSexRatioResult.length,
-                    personLimit :  selectFriendResult[0].personLimit
+                    personLimit :  selectFriendResult[0].personLimit,
+                    name: "temp",
+                    nickname: "temp",
+                    img: "temp"
                 };
 
                 //농활 정보 만들기
@@ -469,7 +472,10 @@ router.get('/', async (req, res, next) => {
                         womanCount : woman ,
                         manCount : man ,
                         attendCount : selectSexRatioResult.length,
-                        personLimit :  selectFriendResult[0].personLimit
+                        personLimit :  selectFriendResult[0].personLimit,
+                        name: "temp",
+                        nickname: "temp",
+                        img: "temp"
                     };
 
                     //농활 정보

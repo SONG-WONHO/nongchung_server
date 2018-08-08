@@ -52,7 +52,10 @@ router.get('/', async (req, res, next) => {
             womanCount : woman ,
             manCount : man ,
             attendCount : selectSexRatioResult.length,
-            personLimit :  selectFriendResult[0].personLimit
+            personLimit :  selectFriendResult[0].personLimit,
+            name: "temp",
+            nickname: "temp",
+            img: "temp"
         };
 
         //쿼리 수행도중 에러가 있을 때
