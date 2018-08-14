@@ -21,6 +21,15 @@ router.get('/', async (req, res) => {
     else{
         let decoded = jwt.verify(token);
 
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         //토큰에 에러 있을 때
         if(decoded===-1){
             res.status(500).send({
@@ -96,6 +105,15 @@ router.delete('/', async (req, res) => {
     else{
 
         let decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
 
         //토큰에러
         if(decoded === -1){
@@ -178,6 +196,15 @@ router.post('/', async (req, res) => {
     //토큰이 있다면?
     else{
         let decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
 
         //비정상적인 토큰
         if(decoded === -1){
