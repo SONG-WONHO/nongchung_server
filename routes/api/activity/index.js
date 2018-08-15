@@ -19,6 +19,16 @@ router.get('/complete',async (req,res)=>{
         });
     }else{
         let decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         if(decoded==-1){
             res.status(500).send({
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
@@ -197,6 +207,16 @@ router.get('/', async (req,res)=>{
         });
     }else{
         let decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         if(decoded==-1){
             res.status(500).send({
                 message : "token err"//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
@@ -358,6 +378,16 @@ router.put('/review', upload.array('rImages', 20), async (req, res)=>{
         });
     }else{
         var decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         if(decoded==-1){
             res.status(500).send({
                 message:"token error"
@@ -406,6 +436,16 @@ router.get('/review/:scheIdx',async(req,res)=>{
         // 정당한 리뷰일 때 수정해야 함
         
         var decoded = jwt.verify(token);
+
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         if(decoded == -1){
             res.status(500).send({
                 message:"token error"

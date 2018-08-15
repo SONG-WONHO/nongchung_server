@@ -20,6 +20,15 @@ router.post('/', async (req, res, next) => {
         //토큰이 있다면?
         let decoded = jwt.verify(token);
 
+        if (decoded === 10) {
+            res.status(500).send({
+                message : "token err",//여기서 400에러를 주면 클라의 문제니까 메세지만 적절하게 잘 바꿔주면 된다.
+                expired: 1
+            });
+
+            return;
+        }
+
         //정당하지 않은 토큰이 들어올 때
         if(decoded === -1){
             res.status(500).send({
