@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const moment = require('moment');
 const check = require('../../../../module/check');
 const db = require('../../../../module/db');
 const jwt = require('../../../../module/jwt');
@@ -9,6 +10,7 @@ router.get('/', async (req, res, next) => {
 
     //토큰이 있는 지 없는 지 검증하기
     let token = req.headers.token;
+    
 
     //토큰이 없다면? ==> 기존의 방식으로!
     if (!token) {
@@ -90,8 +92,9 @@ router.get('/', async (req, res, next) => {
                 `;
 
                 // 성비 쿼리 & 참여인원 쿼리
-                let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
-                JOIN(SELECT idx, sex FROM user) AS user
+                let selectSexRatioQuery = `SELECT user.sex, userIdx, birth
+                FROM activity
+                JOIN(SELECT idx, sex, (YEAR(CURDATE())-YEAR(birth)+1) AS birth FROM user) AS user
                 ON(userIdx = user.idx)
                 WHERE scheIdx = ?
                 group by userIdx;`;
@@ -101,18 +104,26 @@ router.get('/', async (req, res, next) => {
                 //1 스케쥴 총 인원 쿼리 2. 성비 쿼리 3. 참여 인원 쿼리 
                 let selectFriendResult = await db.queryParamArr(selectFriendQuery, [selectScheduleResult[0].idx]);
                 let selectSexRatioResult = await db.queryParamArr(selectSexRatioQuery,[selectScheduleResult[0].idx]);
-                
+                console.log(selectSexRatioResult);
                 
                 //남녀 뽑기                
                 let woman  = 0;
                 let man = 0;
+                let age = 0;
                 for (let i = 0; i < selectSexRatioResult.length; i++){
                     if(selectSexRatioResult[i].sex == 1){
                         man++;
                     }else{
                         woman++;
                     }
+                    age += selectSexRatioResult[i].birth
                 }
+                age = age/selectSexRatioResult.length
+                if(selectSexRatioResult.length == 0){
+                    age = 0;
+                }
+                
+                console.log(age);
 
                 //쿼리 수행도중 에러가 있을 때
                 if (!selectFriendResult) {
@@ -183,7 +194,8 @@ router.get('/', async (req, res, next) => {
                     womanCount : woman ,
                     manCount : man ,
                     attendCount : selectSexRatioResult.length,
-                    personLimit :  selectFriendResult[0].personLimit
+                    personLimit :  selectFriendResult[0].personLimit,
+                    ageAverage : age
                 };
 
                 //농활 정보 만들기
@@ -333,29 +345,40 @@ router.get('/', async (req, res, next) => {
                     `;
 
                     // 성비 쿼리 & 참여인원 쿼리
-                    let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
-                    JOIN(SELECT idx, sex FROM user) AS user
+                    let selectSexRatioQuery = `SELECT  birth,user.sex, userIdx
+                    FROM activity
+                    JOIN(SELECT idx, sex, (YEAR(CURDATE())-YEAR(birth)+1) AS birth FROM user) AS user
                     ON(userIdx = user.idx)
                     WHERE scheIdx = ?
                     group by userIdx;`;
+
+
                     
 
                     //대원결과
                     //1 스케쥴 총 인원 쿼리 2. 성비 쿼리 3. 참여 인원 쿼리 
                     let selectFriendResult = await db.queryParamArr(selectFriendQuery, [selectScheduleResult[0].idx]);
                     let selectSexRatioResult = await db.queryParamArr(selectSexRatioQuery,[selectScheduleResult[0].idx]);
-                    
+                    console.log(selectSexRatioResult);
                     
                     //남녀 뽑기                
                     let woman  = 0;
                     let man = 0;
+                    let age = 0;
                     for (let i = 0; i < selectSexRatioResult.length; i++){
                         if(selectSexRatioResult[i].sex == 1){
                             man++;
                         }else{
                             woman++;
                         }
+                        age += selectSexRatioResult[i].birth; 
                     }
+                    console.log(age);
+                    age =  age/selectSexRatioResult.length;
+                    if(selectSexRatioResult.length == 0){
+                        age = 0;
+                    }
+                    console.log(age);
                     console.log(selectFriendResult[0].personLimit);
 
                     //쿼리 수행도중 에러가 있을 때
@@ -469,7 +492,8 @@ router.get('/', async (req, res, next) => {
                         womanCount : woman ,
                         manCount : man ,
                         attendCount : selectSexRatioResult.length,
-                        personLimit :  selectFriendResult[0].personLimit
+                        personLimit :  selectFriendResult[0].personLimit,
+                        ageAverage : age
                     };
 
                     //농활 정보

@@ -24,8 +24,9 @@ router.get('/', async (req, res, next) => {
         `;
 
         // 성비 쿼리 & 참여인원 쿼리
-        let selectSexRatioQuery = `SELECT user.sex, userIdx FROM activity 
-        JOIN(SELECT idx, sex FROM user) AS user
+        let selectSexRatioQuery = `SELECT  birth,user.sex, userIdx
+        FROM activity
+        JOIN(SELECT idx, sex, (YEAR(CURDATE())-YEAR(birth)+1) AS birth FROM user) AS user
         ON(userIdx = user.idx)
         WHERE scheIdx = ?
         group by userIdx;`;
@@ -40,19 +41,26 @@ router.get('/', async (req, res, next) => {
         //남녀 뽑기                
         let woman  = 0;
         let man = 0;
+        let age = 0;
         for (let i = 0; i < selectSexRatioResult.length; i++){
             if(selectSexRatioResult[i].sex == 1){
                 man++;
             }else{
                 woman++;
             }
+            age += selectSexRatioResult[i].birth; 
         }
-
+        console.log(age);
+        age =  age/selectSexRatioResult.length;
+        if(selectSexRatioResult.length == 0){
+            age = 0;
+        }
         let Info = {
             womanCount : woman ,
             manCount : man ,
             attendCount : selectSexRatioResult.length,
-            personLimit :  selectFriendResult[0].personLimit
+            personLimit :  selectFriendResult[0].personLimit,
+            ageAverage : age
         };
 
         //쿼리 수행도중 에러가 있을 때
