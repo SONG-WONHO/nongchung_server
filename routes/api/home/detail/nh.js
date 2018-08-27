@@ -17,7 +17,7 @@ router.get('/', async (req, res, next) => {
 
         //어떤 농활인 지 받기
         let nhIdx = req.query.idx;
-
+        console.log(nhIdx);
         //비어있는 값인지 검증
         if(check.checkNull([nhIdx])) {
             res.status(400).send({
@@ -111,7 +111,7 @@ router.get('/', async (req, res, next) => {
                 let man = 0;
                 let age = 0;
                 for (let i = 0; i < selectSexRatioResult.length; i++){
-                    if(selectSexRatioResult[i].sex == 1){
+                    if(selectSexRatioResult[i].sex === 1){
                         man++;
                     }else{
                         woman++;
@@ -119,7 +119,7 @@ router.get('/', async (req, res, next) => {
                     age += selectSexRatioResult[i].birth
                 }
                 age = age/selectSexRatioResult.length
-                if(selectSexRatioResult.length == 0){
+                if(selectSexRatioResult.length === 0){
                     age = 0;
                 }
                 

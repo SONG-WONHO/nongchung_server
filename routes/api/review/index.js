@@ -176,7 +176,7 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
                     }
                     let joinedImages = tempArr.join(',');
                     
-                    let showingQuery = `SELECT nh.period, date_format(schedule.startDate,"%Y.%m.%d") AS startDate
+                    let showingQuery = `SELECT nh.idx AS nhIdx,nh.period, date_format(schedule.startDate,"%Y.%m.%d") AS startDate
                     , date_format(schedule.endDate,"%Y.%m.%d") AS endDate
                     FROM NONGHWAL.review, NONGHWAL.schedule, NONGHWAL.nh
                     WHERE review.scheIdx = schedule.idx AND nh.idx = schedule.nhIdx
@@ -188,9 +188,21 @@ router.post('/', upload.array('rImages', 20), async (req, res) => {
 
                     let insertReview = await db.queryParamArr(insertReviewQuery, [joinedImages, decoded.user_idx, content, scheIdx, star]);
                     let showingResult = await db.queryParamArr(showingQuery, [scheIdx]);
+
+                    //별점 평균 업데이트
+                    
+                    let starAverageQuery = `
+                    
+                        UPDATE NONGHWAL.nh
+                        set star = (SELECT avg(star) AS star FROM NONGHWAL.review WHERE scheIdx = ?)
+                        WHERE idx = ?
+                    `;
+                    
+                    let starAverageResult = await db.queryParamArr(starAverageQuery,[scheIdx,showingResult[0]["nhIdx"]]);
+                    
                     
                     //쿼리수행 중 에러가 있을 때
-                    if(!insertReview){
+                    if(!insertReview && !starAverageResult){
                         res.status(500).send({
                             message : "Internal Server Error"
                         })
